@@ -49,7 +49,7 @@ export default function TermsPage() {
                 <section>
                   <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2 sm:mb-3">1. Introduction</h3>
                   <p className="mb-0">
-                    By subscribing to the Pusaka Newsletter ("Newsletter") from Pusaka Newsletter ("we", "us", "our"), you agree to these Terms and Conditions ("Terms").
+                    By subscribing to the Pusaka Newsletter (&quot;Newsletter&quot;) from Pusaka Newsletter (&quot;we&quot;, &quot;us&quot;, &quot;our&quot;), you agree to these Terms and Conditions (&quot;Terms&quot;).
                   </p>
                 </section>
 
@@ -97,7 +97,7 @@ export default function TermsPage() {
                 <section>
                   <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2 sm:mb-3">7. Unsubscribe</h3>
                   <ul className="list-disc list-inside space-y-1 sm:space-y-2 ml-2 sm:ml-4">
-                    <li><strong>Method:</strong> You can unsubscribe by clicking the "Unsubscribe" link typically found at the bottom of each Newsletter email.</li>
+                    <li><strong>Method:</strong> You can unsubscribe by clicking the &quot;Unsubscribe&quot; link typically found at the bottom of each Newsletter email.</li>
                     <li><strong>Timing:</strong> Unsubscription is usually effective within 1-2 business days.</li>
                   </ul>
                 </section>
@@ -144,7 +144,7 @@ export default function TermsPage() {
                 <section>
                   <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2 sm:mb-3">1. Latar Belakang</h3>
                   <p className="mb-0">
-                    Dengan berlangganan Pusaka Newsletter ("Newsletter") dari Pusaka Newsletter ("kami", "kita"), Anda menyetujui Terms and Conditions ("Ketentuan") ini.
+                    Dengan berlangganan Pusaka Newsletter (&quot;Newsletter&quot;) dari Pusaka Newsletter (&quot;kami&quot;, &quot;kita&quot;), Anda menyetujui Terms and Conditions (&quot;Ketentuan&quot;) ini.
                   </p>
                 </section>
 
@@ -192,7 +192,7 @@ export default function TermsPage() {
                 <section>
                   <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2 sm:mb-3">7. Berhenti Berlangganan (Unsubscribe)</h3>
                   <ul className="list-disc list-inside space-y-1 sm:space-y-2 ml-2 sm:ml-4">
-                    <li><strong>Cara:</strong> Anda dapat berhenti berlangganan dengan mengklik tautan "Unsubscribe" di bagian bawah setiap email Newsletter.</li>
+                    <li><strong>Cara:</strong> Anda dapat berhenti berlangganan dengan mengklik tautan &quot;Unsubscribe&quot; di bagian bawah setiap email Newsletter.</li>
                     <li><strong>Waktu:</strong> Proses berhenti berlangganan biasanya efektif dalam 1-2 hari kerja.</li>
                   </ul>
                 </section>
