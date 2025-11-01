@@ -8,18 +8,18 @@ async function createTestUsers() {
     console.log('Creating test users...')
     
     const testUsers = [
-    //   {
-    //     id: 'admin-user-1',
-    //     name: 'Admin User',
-    //     email: 'admin@pusaka.com',
-    //     password: await bcrypt.hash('admin123', 12),
-    //     role: 'ADMIN' as const,
-    //     subscriptionType: 'ANNUALLY' as const,
-    //     subscriptionStart: new Date(),
-    //     subscriptionEnd: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year
-    //     isActive: true,
-    //     trialUsed: false,
-    //   },
+      {
+        id: 'admin-user-1',
+        name: 'Admin User',
+        email: 'admin@pusaka.com',
+        password: await bcrypt.hash('admin123', 12),
+        role: 'ADMIN' as const,
+        subscriptionType: 'ANNUALLY' as const,
+        subscriptionStart: new Date(),
+        subscriptionEnd: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year
+        isActive: true,
+        trialUsed: false,
+      },
       {
         id: 'publisher-user-1',
         name: 'John Publisher',

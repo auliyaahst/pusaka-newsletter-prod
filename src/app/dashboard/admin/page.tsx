@@ -17,7 +17,7 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/login')
-    } else if (status === 'authenticated' && session?.user?.role !== 'ADMIN') {
+    } else if (status === 'authenticated' && session?.user?.role !== 'ADMIN' && session?.user?.role !== 'SUPER_ADMIN') {
       router.push('/dashboard')
     }
   }, [status, session, router])
@@ -30,7 +30,7 @@ export default function AdminDashboardPage() {
     )
   }
 
-  if (session?.user?.role !== 'ADMIN') {
+  if (session?.user?.role !== 'ADMIN' && session?.user?.role !== 'SUPER_ADMIN') {
     return (
       <div className="flex items-center justify-center min-h-screen px-4">
         <div className="text-center">

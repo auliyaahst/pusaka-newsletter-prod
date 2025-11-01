@@ -18,7 +18,7 @@ export default function EditorialDashboardPage() {
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/login')
-    } else if (status === 'authenticated' && session?.user?.role !== 'EDITOR') {
+    } else if (status === 'authenticated' && session?.user?.role !== 'EDITOR' && session?.user?.role !== 'SUPER_ADMIN') {
       router.push('/dashboard')
     }
   }, [status, session, router])
@@ -31,7 +31,7 @@ export default function EditorialDashboardPage() {
     )
   }
 
-  if (session?.user?.role !== 'EDITOR') {
+  if (session?.user?.role !== 'EDITOR' && session?.user?.role !== 'SUPER_ADMIN') {
     return (
       <div className="flex items-center justify-center min-h-screen px-4">
         <div className="text-center">

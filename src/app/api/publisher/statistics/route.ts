@@ -7,7 +7,7 @@ export async function GET() {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session?.user?.role || session.user.role !== 'PUBLISHER') {
+    if (!session?.user?.role || (session.user.role !== 'PUBLISHER' && session.user.role !== 'SUPER_ADMIN')) {
       return NextResponse.json(
         { error: 'Unauthorized - Publisher access required' },
         { status: 403 }
