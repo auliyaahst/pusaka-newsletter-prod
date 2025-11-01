@@ -230,7 +230,7 @@ export default function ArticlePage() {
                     </button>
 
                     {/* Dashboard Items */}
-                    {session?.user?.role === 'ADMIN' && (
+                    {(session?.user?.role === 'ADMIN' || session?.user?.role === 'SUPER_ADMIN') && (
                       <button
                         onClick={() => {
                           router.push('/dashboard/admin')
@@ -246,7 +246,7 @@ export default function ArticlePage() {
                       </button>
                     )}
                     
-                    {session?.user?.role === 'EDITOR' && (
+                    {(session?.user?.role === 'EDITOR' || session?.user?.role === 'SUPER_ADMIN') && (
                       <button
                         onClick={() => {
                           router.push('/dashboard/editorial')
@@ -261,7 +261,7 @@ export default function ArticlePage() {
                       </button>
                     )}
                     
-                    {session?.user?.role === 'PUBLISHER' && (
+                    {(session?.user?.role === 'PUBLISHER' || session?.user?.role === 'SUPER_ADMIN') && (
                       <button
                         onClick={() => {
                           router.push('/dashboard/publisher')

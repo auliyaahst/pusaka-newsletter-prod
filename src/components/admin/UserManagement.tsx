@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 
-type UserRole = 'CUSTOMER' | 'EDITOR' | 'PUBLISHER' | 'ADMIN'
+type UserRole = 'CUSTOMER' | 'EDITOR' | 'PUBLISHER' | 'ADMIN' | 'SUPER_ADMIN'
 type SubscriptionType = 'FREE_TRIAL' | 'MONTHLY' | 'QUARTERLY' | 'HALF_YEARLY' | 'ANNUALLY'
 
 interface User {
@@ -44,7 +44,7 @@ export default function UserManagement() {
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch('/api/admin/users')
+      const response = await fetch('/api/admin/users-working')
       if (response.ok) {
         const data = await response.json()
         setUsers(data)
@@ -59,7 +59,7 @@ export default function UserManagement() {
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      const response = await fetch('/api/admin/users', {
+      const response = await fetch('/api/admin/users-working', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -83,7 +83,7 @@ export default function UserManagement() {
 
   const handleUpdateUser = async (userId: string, updates: Partial<User>) => {
     try {
-      const response = await fetch(`/api/admin/users/${userId}`, {
+      const response = await fetch(`/api/admin/users-working/${userId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -108,7 +108,7 @@ export default function UserManagement() {
     if (!confirm('Are you sure you want to delete this user?')) return
 
     try {
-      const response = await fetch(`/api/admin/users/${userId}`, {
+      const response = await fetch(`/api/admin/users-working/${userId}`, {
         method: 'DELETE',
       })
 
@@ -138,6 +138,7 @@ export default function UserManagement() {
 
   const getRoleColor = (role: string) => {
     switch (role) {
+      case 'SUPER_ADMIN': return 'bg-red-200 text-red-900'
       case 'ADMIN': return 'bg-red-100 text-red-800'
       case 'PUBLISHER': return 'bg-purple-100 text-purple-800'
       case 'EDITOR': return 'bg-blue-100 text-blue-800'
@@ -198,6 +199,7 @@ export default function UserManagement() {
           <option value="EDITOR">Editor</option>
           <option value="PUBLISHER">Publisher</option>
           <option value="ADMIN">Admin</option>
+          <option value="SUPER_ADMIN">Super Admin</option>
         </select>
 
         <select
@@ -385,6 +387,7 @@ export default function UserManagement() {
                   <option value="EDITOR">Editor</option>
                   <option value="PUBLISHER">Publisher</option>
                   <option value="ADMIN">Admin</option>
+                  <option value="SUPER_ADMIN">Super Admin</option>
                 </select>
               </div>
               <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3 pt-4">
@@ -435,6 +438,7 @@ export default function UserManagement() {
                   <option value="EDITOR">Editor</option>
                   <option value="PUBLISHER">Publisher</option>
                   <option value="ADMIN">Admin</option>
+                  <option value="SUPER_ADMIN">Super Admin</option>
                 </select>
               </div>
               <div>

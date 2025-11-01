@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session?.user?.role || session.user.role !== 'EDITOR') {
+    if (!session?.user?.role || (session.user.role !== 'EDITOR' && session.user.role !== 'SUPER_ADMIN')) {
       return NextResponse.json(
         { error: 'Unauthorized - Editor access required' },
         { status: 403 }

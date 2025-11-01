@@ -15,7 +15,7 @@ export async function GET() {
     }
 
     // Publishers and admins can access all editions
-    if (!['PUBLISHER', 'ADMIN'].includes(session.user.role || '')) {
+    if (!['PUBLISHER', 'ADMIN', 'SUPER_ADMIN'].includes(session.user.role || '')) {
       return NextResponse.json(
         { error: 'Forbidden - Publisher access required' },
         { status: 403 }
@@ -85,7 +85,7 @@ export async function POST(request: Request) {
     }
 
     // Publishers and admins can create editions
-    if (!['PUBLISHER', 'ADMIN'].includes(session.user.role || '')) {
+    if (!['PUBLISHER', 'ADMIN', 'SUPER_ADMIN'].includes(session.user.role || '')) {
       return NextResponse.json(
         { error: 'Forbidden - Publisher access required' },
         { status: 403 }

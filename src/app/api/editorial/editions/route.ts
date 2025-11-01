@@ -12,7 +12,7 @@ export async function GET() {
     }
 
     // Editors, Publishers and above can see all editions to assign articles to
-    if (!['EDITOR', 'PUBLISHER', 'ADMIN'].includes(session.user.role || '')) {
+    if (!['EDITOR', 'PUBLISHER', 'ADMIN', 'SUPER_ADMIN'].includes(session.user.role || '')) {
       return NextResponse.json(
         { error: 'Forbidden - Editor access required' },
         { status: 403 }
@@ -65,7 +65,7 @@ export async function POST(request: Request) {
     }
 
     // Editors, Publishers and above can create editions
-    if (!['EDITOR', 'PUBLISHER', 'ADMIN'].includes(session.user.role || '')) {
+    if (!['EDITOR', 'PUBLISHER', 'ADMIN', 'SUPER_ADMIN'].includes(session.user.role || '')) {
       return NextResponse.json(
         { error: 'Forbidden - Editor access required' },
         { status: 403 }

@@ -9,7 +9,7 @@ export async function POST() {
     const session = await getServerSession(authOptions)
     
     // Only allow existing admins to create new admin users
-    if (!session?.user || session.user.role !== 'ADMIN') {
+    if (!session?.user || (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 

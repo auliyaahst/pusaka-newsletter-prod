@@ -18,7 +18,7 @@ export async function PUT(
     }
 
     // Check if user has EDITOR or ADMIN role
-    if (session.user.role !== 'EDITOR') {
+    if (session.user.role !== 'EDITOR' && session.user.role !== 'SUPER_ADMIN') {
       return NextResponse.json({ message: 'Forbidden' }, { status: 403 })
     }
 
@@ -127,6 +127,11 @@ export async function DELETE(
     
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Check if user has EDITOR or SUPER_ADMIN role
+    if (session.user.role !== 'EDITOR' && session.user.role !== 'SUPER_ADMIN') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
     // Delete the article
