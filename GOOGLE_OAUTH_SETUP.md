@@ -188,19 +188,130 @@ pm2 logs pusaka-prod --lines 20
 ✅ User redirected to dashboard
 ```
 
-### **💡 Pro Tip: Database URL Encoding**
-Your password contains special characters. Ensure they're properly URL-encoded:
-- `!` becomes `%21`
-- `@` becomes `%40` 
-- `#` becomes `%23`
-- `*` becomes `%2A`
+## 5. 📝 Production Deployment with Logging
 
-Current encoded password: `%21J%40karta01%23%2A` = `!J@karta01#*`
+### **Step 1: Update Production Environment Variables**
+```env
+# Google OAuth Configuration
+GOOGLE_CLIENT_ID="2386453923-6ks8kumpi3ig17ag424i1ud85cdd542h.apps.googleusercontent.com"
+GOOGLE_CLIENT_SECRET="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"
 
-**Step 3: Test Google OAuth**
-- Visit https://thepusaka.id/login
-- Click "Continue with Google"
-- Should now redirect to dashboard successfully
+# NextAuth Configuration
+NEXTAUTH_SECRET="9qxKMh8d1UB4+VjjLs3eOyHsOUzZDQi4x+gW1sLMH5Q="
+NEXTAUTH_URL="https://thepusaka.id"
+
+# Database Configuration (RECOMMENDED: Use Prisma Accelerate)
+DATABASE_URL="postgresql://tpadmin:%21J%40karta01%23%2A@103.16.117.237:5432/pusaka_prod"
+POSTGRES_URL="${DATABASE_URL}"
+PRISMA_DATABASE_URL="prisma+postgres://accelerate.prisma-data.net/?api_key=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqd3RfaWQiOjEsInNlY3VyZV9rZXkiOiJza19ZWHZjN3BMM293ckitemlCNzFhZFYiLCJhcGlfa2V5IjoiMDFLOFdZOFJLUEhTMTI2ODAxMlIyS01BUjEiLCJ0ZW5hbnRfaWQiOiIxYmJhMDM5ZGU4ZmMyNTZjNTI4ZDgxMjMyNDY2ZGMyYmNjZDBkMDRiODhmY2UyMGEzZjAyZjE1YzQxNmViM2VlIiwiaW50ZXJuYWxfc2VjcmV0IjoiZmJhMGRkN2QtNzBmOS00MWM4LTkzNWEtODhlMGJiY2Q1MTg3In0.1x0nun4QKnp5JnWXaeRUhPwhpnft0aTIVWoZDGrIk4I"
+
+# Gmail SMTP Configuration
+GMAIL_USER=tpadmin@thepusaka.id
+GMAIL_APP_PASSWORD=wzfvewfvdlwgefik
+```
+
+### **Step 2: Deploy and Monitor Logs**
+```bash
+# On your production server:
+cd /path/to/your/app
+
+# Update environment variables in .env
+# Then rebuild and restart
+npm run build
+pm2 restart pusaka-prod
+
+# Monitor logs in real-time to debug authentication
+pm2 logs pusaka-prod --lines 100
+```
+
+### **Step 3: Debug Login Flow with Enhanced Logging**
+
+Now your application has comprehensive logging for the entire authentication process:
+
+**📱 Frontend Logging:**
+- Login form submission attempts
+- OTP verification steps  
+- Google OAuth initialization
+- Session establishment
+
+**🚀 API Logging:**
+- `/api/auth/send-otp` - Password verification, OTP generation, email sending
+- `/api/auth/verify-otp` - OTP validation, user verification
+- NextAuth callbacks - JWT creation, session management, redirects
+
+**🔐 Dashboard Logging:**
+- Authentication status checks
+- Session validation
+- Redirect behavior
+
+### **Step 4: Test Authentication Flow**
+
+1. **Open Browser Developer Console** (F12)
+2. **Visit**: https://thepusaka.id/login  
+3. **Try Login** with your credentials
+4. **Monitor both**:
+   - Browser console for frontend logs
+   - `pm2 logs pusaka-prod` for backend logs
+
+### **🔍 Expected Log Flow for Successful Login:**
+
+**Frontend Console:**
+```
+📧 Login attempt started for email: your@email.com
+🔐 Sending OTP request to /api/auth/send-otp
+📡 OTP API response status: 200
+📊 OTP API response data: {success: true}
+📱 Regular OTP mode - showing verification
+```
+
+**Backend Logs:**
+```
+🚀 Send OTP API called - email: your@email.com type: login
+🔍 Looking up user in database
+👤 User found: true
+🔐 Verifying password
+✅ Password valid: true
+🎲 Generating OTP
+📧 Sending OTP email
+📤 Email send result: {success: true}
+✅ OTP sent successfully
+```
+
+**After OTP Entry:**
+```
+📱 OTP verification attempt for email: your@email.com type: login
+🚀 Sending OTP verification to /api/auth/verify-otp
+✅ OTP verification successful
+🔐 Attempting credentials sign-in
+🎫 SignIn result: {ok: true}
+✅ SignIn successful, waiting for session establishment
+```
+
+### **❌ Common Error Patterns to Look For:**
+
+**Database Connection Issues:**
+```
+❌ Database connection failed: P1001
+💥 Send OTP error: Can't reach database server
+```
+
+**Invalid OTP/Password:**
+```
+❌ Invalid password
+❌ OTP code mismatch
+```
+
+**Session/Redirect Issues:**
+```
+❌ User is unauthenticated, redirecting to login
+❌ No session found, redirecting to login
+```
+
+**Google OAuth Issues:**
+```
+NextAuth Error: Callback error
+💥 Google Sign In Error: [error details]
+```
 
 ### **🔍 If Issue Persists - Debugging Steps:**
 

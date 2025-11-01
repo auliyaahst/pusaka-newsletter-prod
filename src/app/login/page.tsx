@@ -37,18 +37,25 @@ function LoginPageContent() {
     setIsLoading(true)
     setError('')
 
+    console.log('📧 Login attempt started for email:', email)
+
     try {
       // Send OTP verification request
+      console.log('🔐 Sending OTP request to /api/auth/send-otp')
       const response = await fetch('/api/auth/send-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, type: 'login' })
       })
 
+      console.log('📡 OTP API response status:', response.status)
       const data = await response.json()
+      console.log('📊 OTP API response data:', data)
 
       if (data.success) {
+        console.log('✅ OTP sent successfully')
         if (data.skipOTP) {
+          console.log('⚡ Skip OTP mode - direct login for admin/staff')
           // For excluded admin/staff emails, directly sign in
           const result = await signIn('credentials', {
             email,
@@ -56,21 +63,27 @@ function LoginPageContent() {
             redirect: false
           })
 
+          console.log('🔐 SignIn result:', result)
+          
           if (result?.error) {
+            console.error('❌ SignIn failed:', result.error)
             setError('Login failed. Please try again.')
           } else {
+            console.log('✅ Login successful, redirecting to dashboard')
             router.push('/dashboard')
             router.refresh()
           }
         } else {
+          console.log('📱 Regular OTP mode - showing verification')
           // For regular users, show OTP verification
           setShowOTPVerification(true)
         }
       } else {
+        console.error('❌ OTP API failed:', data.error)
         setError(data.error || 'Invalid email or password')
       }
     } catch (err) {
-      console.error('Login error:', err)
+      console.error('💥 Login error:', err)
       setError('An error occurred. Please try again.')
     } finally {
       setIsLoading(false)
@@ -78,13 +91,16 @@ function LoginPageContent() {
   }
 
   const handleOTPSuccess = async () => {
+    console.log('🎉 OTP verification successful')
     // Wait a moment for the session to be established
     await new Promise(resolve => setTimeout(resolve, 1000))
+    console.log('🚀 Redirecting to dashboard after OTP success')
     router.push('/dashboard')
     router.refresh()
   }
 
   const handleBackToLogin = () => {
+    console.log('🔙 Back to login form')
     // Reset to login form instead of going back
     setShowOTPVerification(false)
     setError('')
@@ -92,14 +108,18 @@ function LoginPageContent() {
 
   const handleGoogleSignIn = async () => {
     try {
+      console.log('🔍 Google SignIn attempt started')
       setIsLoading(true)
       setError('')
+      
+      console.log('🌐 Callback URL:', `${window.location.origin}/dashboard`)
       await signIn('google', { 
         callbackUrl: `${window.location.origin}/dashboard`,
         redirect: true
       })
+      console.log('📡 Google SignIn request sent')
     } catch (err) {
-      console.error('Google Sign In Error:', err)
+      console.error('💥 Google Sign In Error:', err)
       setError('An error occurred during Google sign in. Please try again.')
       setIsLoading(false)
     }

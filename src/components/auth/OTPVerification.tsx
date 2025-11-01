@@ -61,27 +61,43 @@ export default function OTPVerification({ email, type, password, onBack, onSucce
     }
   }
 
-  const handleVerifyOTP = async () => {
-    const otpCode = otp.join('')
-    if (otpCode.length !== 6) {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    const otpString = otp.join('')
+    console.log('📱 OTP verification attempt for email:', email, 'type:', type)
+    console.log('🔢 OTP length:', otpString.length)
+    
+    if (otpString.length !== 6) {
       setError('Please enter all 6 digits')
       return
     }
 
     setIsVerifying(true)
     setError('')
+    setSuccessMessage('')
 
     try {
+      console.log('🚀 Sending OTP verification to /api/auth/verify-otp')
       const response = await fetch('/api/auth/verify-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, otp: otpCode, type })
+        body: JSON.stringify({ 
+          email, 
+          otp: otpString, 
+          type, 
+          password: type === 'login' ? password : undefined 
+        })
       })
 
+      console.log('📡 OTP verification response status:', response.status)
       const data = await response.json()
+      console.log('📊 OTP verification response data:', data)
 
       if (data.success) {
+        console.log('✅ OTP verification successful')
         if (type === 'login') {
+          console.log('🔐 Attempting credentials sign-in')
           // Sign in the user
           const result = await signIn('credentials', {
             email,
@@ -89,22 +105,30 @@ export default function OTPVerification({ email, type, password, onBack, onSucce
             redirect: false
           })
           
+          console.log('🎫 SignIn result:', result)
+          
           if (result?.ok) {
+            console.log('✅ SignIn successful, waiting for session establishment')
             // Wait for session to be established before calling success
             setTimeout(() => {
+              console.log('🎉 Calling onSuccess callback')
               onSuccess()
             }, 500)
           } else {
+            console.error('❌ Login failed after OTP verification:', result?.error)
             setError('Login failed after OTP verification')
           }
         } else {
+          console.log('📝 Registration complete')
           // Registration complete - redirect to login
           onSuccess()
         }
       } else {
+        console.error('❌ OTP verification failed:', data.error)
         setError(data.error || 'Verification failed')
       }
-    } catch {
+    } catch (err) {
+      console.error('💥 OTP verification error:', err)
       setError('Network error. Please try again.')
     } finally {
       setIsVerifying(false)
@@ -114,6 +138,7 @@ export default function OTPVerification({ email, type, password, onBack, onSucce
   const handleResendOTP = async () => {
     if (resendCooldown > 0 || isResending) return
 
+    console.log('🔄 Resending OTP for email:', email, 'type:', type)
     setIsResending(true)
     setError('')
     setSuccessMessage('')
@@ -129,15 +154,19 @@ export default function OTPVerification({ email, type, password, onBack, onSucce
         requestBody.password = password
       }
 
+      console.log('📤 Sending resend OTP request')
       const response = await fetch('/api/auth/send-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestBody)
       })
 
+      console.log('📡 Resend OTP response status:', response.status)
       const data = await response.json()
+      console.log('📊 Resend OTP response data:', data)
 
       if (response.ok && data.success) {
+        console.log('✅ OTP resent successfully')
         setTimeLeft(60) // Reset to 1 minute
         setResendCooldown(60) // 1 minute cooldown
         setOtp(['', '', '', '', '', ''])
@@ -213,7 +242,7 @@ export default function OTPVerification({ email, type, password, onBack, onSucce
         </div>
 
         <button
-          onClick={handleVerifyOTP}
+          onClick={handleSubmit}
           disabled={isVerifying || otp.join('').length !== 6}
           className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
         >

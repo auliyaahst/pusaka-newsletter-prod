@@ -22,26 +22,32 @@ export default function RegisterPage() {
     setIsLoading(true)
     setError('')
 
+    console.log('📝 Registration attempt started for email:', formData.email)
+
     // Validation
     if (formData.password !== formData.passwordConfirm) {
+      console.log('❌ Password confirmation mismatch')
       setError('Passwords do not match')
       setIsLoading(false)
       return
     }
 
     if (formData.password.length < 6) {
+      console.log('❌ Password too short')
       setError('Password must be at least 6 characters long')
       setIsLoading(false)
       return
     }
 
     if (!agreedToTerms) {
+      console.log('❌ Terms not agreed')
       setError('Please agree to the Terms & Conditions')
       setIsLoading(false)
       return
     }
 
     try {
+      console.log('🚀 Sending registration request to /api/auth/register')
       // Create user account and send verification email
       const response = await fetch('/api/auth/register', {
         method: 'POST',
@@ -55,16 +61,20 @@ export default function RegisterPage() {
         }),
       })
 
+      console.log('📡 Registration API response status:', response.status)
       const data = await response.json()
+      console.log('📊 Registration API response data:', data)
 
       if (response.ok) {
+        console.log('✅ Registration successful - verification email sent')
         // Show success message - verification email sent
         setEmailSent(true)
       } else {
+        console.error('❌ Registration failed:', data.error)
         setError(data.error || 'Registration failed')
       }
     } catch (err) {
-      console.error('Registration error:', err)
+      console.error('💥 Registration error:', err)
       setError('An error occurred during registration')
     }
     
@@ -72,6 +82,7 @@ export default function RegisterPage() {
   }
 
   const handleGoogleSignIn = async () => {
+    console.log('🔍 Google registration sign-in attempt')
     setIsLoading(true)
     await signIn('google', { callbackUrl: '/dashboard' })
     setIsLoading(false)

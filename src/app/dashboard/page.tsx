@@ -181,9 +181,18 @@ export default function DashboardPage() {
     }
   }, [selectedEditionId])
   useEffect(() => {
+    console.log('🔐 Dashboard auth check - status:', status, 'session:', !!session)
+    if (status === 'loading') {
+      console.log('⏳ Auth status is loading...')
+      return
+    }
+    
     if (status === 'unauthenticated') {
+      console.log('❌ User is unauthenticated, redirecting to login')
       router.push('/login')
     } else if (status === 'authenticated') {
+      console.log('✅ User is authenticated, fetching editions')
+      console.log('👤 Session user:', session?.user?.email, session?.user?.role)
       fetchEditions()
     }
   }, [status, router, fetchEditions])
@@ -412,6 +421,7 @@ export default function DashboardPage() {
   }
 
   if (status === 'loading') {
+    console.log('⏳ Dashboard: Auth status is loading, showing spinner')
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -423,6 +433,7 @@ export default function DashboardPage() {
   }
 
   if (!session) {
+    console.log('❌ Dashboard: No session found, redirecting to login')
     // Redirect to login if no session
     router.push('/login')
     return (
@@ -434,6 +445,8 @@ export default function DashboardPage() {
       </div>
     )
   }
+
+  console.log('✅ Dashboard: Rendering main dashboard for user:', session.user?.email)
 
   return (
     <div className="h-screen flex flex-col" style={{ backgroundColor: 'var(--accent-blue)' }}>
