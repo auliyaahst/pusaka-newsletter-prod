@@ -24,7 +24,6 @@ async function addPasswordResetFields() {
   }
 }
 
-// Run the function
 addPasswordResetFields()
   .then(() => {
     console.log('🎉 Password reset setup complete!')

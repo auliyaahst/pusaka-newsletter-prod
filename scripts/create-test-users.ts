@@ -35,7 +35,7 @@ async function createTestUsers() {
       {
         id: 'editor-user-1',
         name: 'Jane Editor',
-        email: 'editor@pusaka.com',
+        email: 'hadi@thepusaka.id',
         password: await bcrypt.hash('editor123', 12),
         role: 'EDITOR' as const,
         subscriptionType: 'MONTHLY' as const,

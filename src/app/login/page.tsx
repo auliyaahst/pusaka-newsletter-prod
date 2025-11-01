@@ -43,9 +43,9 @@ function LoginPageContent() {
     console.log('📧 Login attempt started for email:', email)
 
     try {
-      // Send OTP verification request
-      console.log('🔐 Sending OTP request to /api/auth/send-otp')
-      const response = await fetch('/api/auth/send-otp', {
+      // Send OTP verification request (using working endpoint while database is being fixed)
+      console.log('🔐 Sending OTP request to /api/auth/send-otp-working')
+      const response = await fetch('/api/auth/send-otp-working', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, type: 'login' })

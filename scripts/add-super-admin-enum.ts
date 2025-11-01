@@ -22,7 +22,6 @@ async function addSuperAdminEnum() {
   }
 }
 
-// Run the function
 addSuperAdminEnum()
   .then(() => {
     console.log('🎉 Enum update complete!')

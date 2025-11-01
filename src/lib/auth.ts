@@ -7,7 +7,11 @@ import bcrypt from "bcryptjs"
 
 // Configure NextAuth
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
+  // TEMPORARY: Disable PrismaAdapter to avoid database dependency
+  // adapter: PrismaAdapter(prisma),
+  session: {
+    strategy: "jwt", // Use JWT instead of database sessions
+  },
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -28,11 +32,19 @@ export const authOptions: NextAuthOptions = {
         }
 
         try {
-          const user = await prisma.user.findUnique({
-            where: { email: credentials.email }
-          })
+          // TEMPORARY: Mock user to bypass database connection issue
+          const mockUser = {
+            id: '1',
+            email: 'tpadmin@thepusaka.id',
+            name: 'TP Super Admin',
+            role: 'SUPER_ADMIN',
+            isActive: true,
+            isVerified: true,
+            password: '$2b$12$skyS8Ql7K/auejdksBF1eOh2W7WNaW1lx1BgXi2jutz2QXgcNqW4e' // M@cchiato0#
+          }
 
-          console.log("👤 User found:", user ? "Yes" : "No")
+          const user = mockUser.email.toLowerCase() === credentials.email.toLowerCase() ? mockUser : null
+          console.log("👤 [TEMP] User found:", user ? "Yes" : "No")
 
           if (!user) {
             console.log("❌ User not found")
@@ -69,12 +81,16 @@ export const authOptions: NextAuthOptions = {
             throw new Error("Invalid credentials")
           }
 
-          const isPasswordValid = await bcrypt.compare(
-            credentials.password,
-            user.password
-          )
+          // TEMPORARY: Check against both old and new password
+          const oldPasswordHash = '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj3w6ckVG/Sy' // admin123
+          const newPasswordHash = '$2b$12$skyS8Ql7K/auejdksBF1eOh2W7WNaW1lx1BgXi2jutz2QXgcNqW4e' // M@cchiato0#
+          
+          const isValidOldPassword = await bcrypt.compare(credentials.password, oldPasswordHash)
+          const isValidNewPassword = await bcrypt.compare(credentials.password, newPasswordHash)
+          const isPasswordValid = isValidOldPassword || isValidNewPassword
 
-          console.log("🔑 Password valid:", isPasswordValid)
+          console.log("🔑 [TEMP] Password valid:", isPasswordValid)
+          console.log("🔍 [TEMP] Testing password:", credentials.password)
 
           if (!isPasswordValid) {
             console.log("❌ Invalid password")
@@ -86,7 +102,7 @@ export const authOptions: NextAuthOptions = {
             throw new Error("Account is not active")
           }
 
-          console.log("✅ Authentication successful for:", user.email)
+          console.log("✅ [TEMP] Authentication successful for:", user.email)
           return {
             id: user.id,
             email: user.email,
@@ -103,9 +119,6 @@ export const authOptions: NextAuthOptions = {
   pages: {
     signIn: "/login",
     error: "/login",
-  },
-  session: {
-    strategy: "jwt",
   },
   callbacks: {
     async jwt({ token, user }) {
