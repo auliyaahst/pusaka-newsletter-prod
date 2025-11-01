@@ -61,7 +61,7 @@ export default function ArticleManagement() {
 
   const fetchArticles = async () => {
     try {
-      const response = await fetch('/api/editorial/articles')
+      const response = await fetch('/api/editorial/articles-working')
       if (response.ok) {
         const data = await response.json()
         setArticles(data.articles)
@@ -78,7 +78,7 @@ export default function ArticleManagement() {
   const updateArticleStatus = async (articleId: string, newStatus: string) => {
     setIsUpdating(articleId)
     try {
-      const response = await fetch(`/api/editorial/articles/${articleId}/status`, {
+      const response = await fetch(`/api/editorial/articles-working/${articleId}/status`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -106,7 +106,7 @@ export default function ArticleManagement() {
 
     setIsUpdating(articleId)
     try {
-      const response = await fetch(`/api/editorial/articles/${articleId}`, {
+      const response = await fetch(`/api/editorial/articles-working/${articleId}`, {
         method: 'DELETE',
       })
 
@@ -129,7 +129,7 @@ export default function ArticleManagement() {
     if (!confirm('Are you sure you want to archive this article?')) return
     
     try {
-      const response = await fetch(`/api/editorial/articles/${id}/archive`, {
+      const response = await fetch(`/api/editorial/articles-working/${id}/archive`, {
         method: 'PATCH',
       })
       
@@ -149,7 +149,7 @@ export default function ArticleManagement() {
     if (!confirm('Are you sure you want to unarchive this article?')) return
     
     try {
-      const response = await fetch(`/api/editorial/articles/${id}/unarchive`, {
+      const response = await fetch(`/api/editorial/articles-working/${id}/unarchive`, {
         method: 'PATCH',
       })
       

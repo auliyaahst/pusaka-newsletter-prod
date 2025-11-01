@@ -110,7 +110,7 @@ export default function EditArticle({ article, onClose, onUpdate }: EditArticleP
         statusMessage = '✅ Article sent for review!'
       }
 
-      const response = await fetch(`/api/editorial/articles/${article.id}`, {
+      const response = await fetch(`/api/editorial/articles-working/${article.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
