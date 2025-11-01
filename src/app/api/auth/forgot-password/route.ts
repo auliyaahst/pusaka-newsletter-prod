@@ -32,14 +32,16 @@ export async function POST(request: NextRequest) {
 
     console.log('🔑 Generated reset token for user:', user.id)
 
-    // Save reset token to database
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        resetToken,
-        resetExpiry
-      }
-    })
+    // TODO: Save reset token to database when schema is updated
+    // await prisma.user.update({
+    //   where: { id: user.id },
+    //   data: {
+    //     resetToken,
+    //     resetExpiry
+    //   }
+    // })
+
+    console.log('⚠️ [ORIGINAL] Database update skipped - using working endpoint instead')
 
     // Create reset URL
     const resetUrl = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`
