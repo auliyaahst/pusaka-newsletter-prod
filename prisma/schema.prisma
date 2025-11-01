@@ -182,6 +182,7 @@ enum UserRole {
   EDITOR
   PUBLISHER
   ADMIN
+  SUPER_ADMIN
 }
 
 enum SubscriptionType {
