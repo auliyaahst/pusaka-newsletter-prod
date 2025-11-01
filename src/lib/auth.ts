@@ -109,18 +109,48 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     async jwt({ token, user }) {
+      console.log("🎫 JWT Callback - token:", !!token, "user:", !!user)
       if (user) {
+        console.log("👤 Adding user to token:", user.email, user.role)
         token.id = user.id
         token.role = user.role
       }
       return token
     },
     async session({ session, token }) {
+      console.log("🔐 Session Callback - session:", !!session, "token:", !!token)
       if (token && session.user) {
+        console.log("✅ Adding token data to session:", token.id, token.role)
         session.user.id = token.id as string
         session.user.role = token.role as string
       }
       return session
+    },
+    async redirect({ url, baseUrl }) {
+      console.log("🔄 Redirect Callback - url:", url, "baseUrl:", baseUrl)
+      console.log("🌐 NEXTAUTH_URL:", process.env.NEXTAUTH_URL)
+      console.log("🔗 Current URL parts:", { url, baseUrl })
+      
+      // Handle Google OAuth callback
+      if (url.includes('/api/auth/callback/google')) {
+        console.log("📱 Google OAuth callback detected")
+        return `${baseUrl}/dashboard`
+      }
+      
+      // Always redirect to dashboard after successful login
+      if (url.startsWith("/") && !url.includes("/login")) {
+        console.log("📍 Redirecting to dashboard from relative URL")
+        return `${baseUrl}/dashboard`
+      }
+      
+      // If it's a login page, redirect to dashboard
+      if (url.includes("/login") || url === baseUrl) {
+        console.log("🏠 Redirecting to dashboard from login/home")
+        return `${baseUrl}/dashboard`
+      }
+      
+      console.log("↩️ Default redirect logic")
+      return url.startsWith(baseUrl) ? url : `${baseUrl}/dashboard`
     },
   },
   debug: true,

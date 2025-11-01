@@ -77,7 +77,9 @@ function LoginPageContent() {
     }
   }
 
-  const handleOTPSuccess = () => {
+  const handleOTPSuccess = async () => {
+    // Wait a moment for the session to be established
+    await new Promise(resolve => setTimeout(resolve, 1000))
     router.push('/dashboard')
     router.refresh()
   }

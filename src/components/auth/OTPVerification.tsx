@@ -90,7 +90,10 @@ export default function OTPVerification({ email, type, password, onBack, onSucce
           })
           
           if (result?.ok) {
-            onSuccess()
+            // Wait for session to be established before calling success
+            setTimeout(() => {
+              onSuccess()
+            }, 500)
           } else {
             setError('Login failed after OTP verification')
           }
