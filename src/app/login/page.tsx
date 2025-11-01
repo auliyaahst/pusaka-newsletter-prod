@@ -20,9 +20,12 @@ function LoginPageContent() {
   useEffect(() => {
     const verified = searchParams.get('verified')
     const errorParam = searchParams.get('error')
+    const message = searchParams.get('message')
     
     if (verified === 'true') {
       setSuccess('Email verified successfully! You can now log in.')
+    } else if (message === 'password-reset-success') {
+      setSuccess('Password reset successfully! You can now log in with your new password.')
     } else if (errorParam === 'invalid-verification') {
       setError('Invalid verification link.')
     } else if (errorParam === 'invalid-or-expired') {
@@ -247,11 +250,18 @@ function LoginPageContent() {
                   Continue with Google
                 </button>
 
-                <div className="mt-6 text-center">
-                  <span className="text-sm text-gray-600">Don&apos;t have an account? </span>
-                  <Link href="/register" className="text-sm text-blue-600 hover:text-blue-800 underline">
-                    Sign up
-                  </Link>
+                <div className="mt-6 text-center space-y-2">
+                  <div>
+                    <Link href="/forgot-password" className="text-sm text-blue-600 hover:text-blue-800 underline">
+                      Forgot your password?
+                    </Link>
+                  </div>
+                  <div>
+                    <span className="text-sm text-gray-600">Don&apos;t have an account? </span>
+                    <Link href="/register" className="text-sm text-blue-600 hover:text-blue-800 underline">
+                      Sign up
+                    </Link>
+                  </div>
                 </div>
               </>
             )}
