@@ -1,4 +1,4 @@
-import NextAuth, { NextAuthOptions } from "next-auth"
+import { NextAuthOptions } from "next-auth"
 import GoogleProvider from "next-auth/providers/google"
 import CredentialsProvider from "next-auth/providers/credentials"
 import bcrypt from "bcryptjs"
@@ -107,14 +107,14 @@ export const authOptionsWorking: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.role = (user as any).role
+        token.role = (user as { role: string }).role
       }
       return token
     },
     async session({ session, token }) {
       if (token && session.user) {
-        (session.user as any).id = token.sub
-        (session.user as any).role = token.role
+        (session.user as { id: string; role: string }).id = token.sub as string
+        (session.user as { id: string; role: string }).role = token.role as string
       }
       return session
     },

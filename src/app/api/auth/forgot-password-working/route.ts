@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
 
     // Generate reset token (this will work without database)
     const resetToken = crypto.randomBytes(32).toString('hex')
-    const resetExpiry = new Date(Date.now() + 15 * 60 * 1000) // 15 minutes
+    // Note: resetExpiry would be used in database storage (15 minutes from now)
 
     console.log('🔑 Generated reset token:', resetToken)
 

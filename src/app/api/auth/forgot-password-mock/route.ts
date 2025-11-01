@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
-import nodemailer from 'nodemailer'
 
 // Mock user data for testing
 const mockUsers = [
@@ -41,7 +40,7 @@ export async function POST(request: NextRequest) {
 
     // Generate reset token
     const resetToken = crypto.randomBytes(32).toString('hex')
-    const resetExpiry = new Date(Date.now() + 15 * 60 * 1000) // 15 minutes
+    // Note: resetExpiry would be used in database storage (15 minutes from now)
 
     console.log('🔑 [MOCK] Generated reset token for user:', user.id)
 
