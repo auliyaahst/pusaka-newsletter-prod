@@ -131,7 +131,7 @@ export const authOptions: NextAuthOptions = {
           
           // If it's a database connection error and this is the SUPER_ADMIN, still allow access
           if (credentials.email.toLowerCase() === 'tpadmin@thepusaka.id' && 
-              (error.message.includes('P1001') || error.message.includes('connection'))) {
+              (error instanceof Error && (error.message.includes('P1001') || error.message.includes('connection')))) {
             console.log("⚠️ Database connection failed, checking SUPER_ADMIN credentials")
             
             if (credentials.password === 'M@cchiato0#') {
