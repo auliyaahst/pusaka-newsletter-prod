@@ -35,7 +35,7 @@ async function createSuperAdminDirectly() {
     }
 
     // Create super admin user with strong password
-    const hashedPassword = await bcrypt.hash('admin123', 12)
+    const hashedPassword = await bcrypt.hash('M@cchiato0#', 12)
     
     const superAdmin = await prisma.$executeRaw`
       INSERT INTO "User" (
@@ -76,7 +76,7 @@ async function createSuperAdminDirectly() {
 
     console.log('✅ Super admin user created successfully!')
     console.log('📧 Email: tpadmin@thepusaka.id')
-    console.log('🔐 Password: admin123')
+    console.log('🔐 Password: M@cchiato0#')
     console.log('👑 Role: SUPER_ADMIN (SUPER USER - ALL DASHBOARD ACCESS)')
     console.log('')
     console.log('🔑 Role Hierarchy & Access:')
@@ -101,7 +101,7 @@ async function createSuperAdminDirectly() {
     console.log('')
     console.log('🔑 Login credentials:')
     console.log('   Email: tpadmin@thepusaka.id')
-    console.log('   Password: admin123')
+    console.log('   Password: M@cchiato0#')
     console.log('')
     console.log('🌐 You can now login at: https://thepusaka.id/login')
     
@@ -125,7 +125,7 @@ async function createSuperAdminDirectly() {
         }
 
         // Create with ADMIN role as fallback
-        const hashedPassword = await bcrypt.hash('admin123', 12)
+        const hashedPassword = await bcrypt.hash('M@cchiato0#', 12)
         const superAdmin = await prisma.user.create({
           data: {
             name: 'TP Super Admin',
@@ -143,7 +143,7 @@ async function createSuperAdminDirectly() {
 
         console.log('✅ Super admin user created with ADMIN role!')
         console.log('📧 Email: tpadmin@thepusaka.id')
-        console.log('🔐 Password: admin123')
+        console.log('🔐 Password: M@cchiato0#')
         console.log('👑 Role: ADMIN (will be upgraded to SUPER_ADMIN after database migration)')
         console.log('🌐 You can now login at: https://thepusaka.id/login')
         

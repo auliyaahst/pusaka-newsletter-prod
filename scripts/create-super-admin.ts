@@ -16,14 +16,14 @@ async function createSuperAdmin() {
       console.log('✅ Super admin user already exists!')
       console.log('📧 Email:', existingUser.email)
       console.log('👑 Role:', existingUser.role)
-      console.log('🔐 Password: admin123 (if you need to reset it, delete the user and run this script again)')
+      console.log('🔐 Password: M@cchiato0# (if you need to reset it, delete the user and run this script again)')
       console.log('🎯 This user has ALL DASHBOARD ACCESS: Admin + Publisher + Editor + Customer dashboards')
       console.log('🌐 Access all dashboard features at: https://thepusaka.id/dashboard')
       return existingUser
     }
 
     // Create super admin user with strong password
-    const hashedPassword = await bcrypt.hash('admin123', 12)
+    const hashedPassword = await bcrypt.hash('M@cchiato0#', 12)
     
     const superAdmin = await prisma.user.create({
       data: {
@@ -47,7 +47,7 @@ async function createSuperAdmin() {
 
     console.log('✅ Super admin user created successfully!')
     console.log('📧 Email: tpadmin@thepusaka.id')
-    console.log('🔐 Password: admin123')
+    console.log('🔐 Password: M@cchiato0#')
     console.log('👑 Role: SUPER_ADMIN (SUPER USER - ALL DASHBOARD ACCESS)')
     console.log('')
     console.log('🔑 Role Hierarchy & Access:')
@@ -72,7 +72,7 @@ async function createSuperAdmin() {
     console.log('')
     console.log('🔑 Login credentials:')
     console.log('   Email: tpadmin@thepusaka.id')
-    console.log('   Password: admin123')
+    console.log('   Password: M@cchiato0#')
     console.log('')
     console.log('🌐 You can now login at: http://localhost:3000/login')
     

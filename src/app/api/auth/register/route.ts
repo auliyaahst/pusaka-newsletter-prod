@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
 
     if (existingUser) {
       return NextResponse.json(
-        { error: 'User with this email already exists' },
+        { error: 'Invalid email or password' },
         { status: 400 }
       )
     }

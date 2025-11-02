@@ -18,27 +18,27 @@ export async function POST(request: NextRequest) {
 
     if (!user) {
       console.log('❌ User not found')
-      return NextResponse.json({ error: 'User not found' }, { status: 400 })
+      return NextResponse.json({ error: 'Invalid email or password' }, { status: 400 })
     }
 
     console.log('🔍 User found, checking OTP validity')
     // Check if OTP exists and hasn't expired
     if (!user.otpCode || !user.otpExpiry) {
       console.log('❌ No OTP found in database')
-      return NextResponse.json({ error: 'No OTP found. Please request a new one.' }, { status: 400 })
+      return NextResponse.json({ error: 'Invalid email or password' }, { status: 400 })
     }
 
     const now = new Date()
     console.log('⏰ OTP expiry check - now:', now, 'expiry:', user.otpExpiry)
     if (now > user.otpExpiry) {
       console.log('❌ OTP has expired')
-      return NextResponse.json({ error: 'OTP has expired. Please request a new one.' }, { status: 400 })
+      return NextResponse.json({ error: 'Invalid email or password' }, { status: 400 })
     }
 
     console.log('🔢 Comparing OTP codes')
     if (user.otpCode !== otp) {
       console.log('❌ OTP code mismatch')
-      return NextResponse.json({ error: 'Invalid OTP' }, { status: 400 })
+      return NextResponse.json({ error: 'Invalid email or password' }, { status: 400 })
     }
 
     console.log('✅ OTP verified successfully, updating user')

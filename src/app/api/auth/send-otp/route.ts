@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
       // For register type, user should already exist (created by register API)
       if (!existingUser) {
         console.log('❌ User not found for registration verification')
-        return NextResponse.json({ error: 'User not found. Please register first.' }, { status: 400 })
+        return NextResponse.json({ error: 'Invalid email or password' }, { status: 400 })
       }
       console.log('📝 Registration OTP request - user exists')
       // No password verification needed for registration email verification
@@ -45,11 +45,11 @@ export async function POST(request: NextRequest) {
     if (type === 'login') {
       if (!existingUser) {
         console.log('❌ User not found for login')
-        return NextResponse.json({ error: 'User not found' }, { status: 400 })
+        return NextResponse.json({ error: 'Invalid email or password' }, { status: 400 })
       }
       if (!password) {
         console.log('❌ Password missing for login')
-        return NextResponse.json({ error: 'Password is required' }, { status: 400 })
+        return NextResponse.json({ error: 'Invalid email or password' }, { status: 400 })
       }
       
       console.log('🔐 Verifying password')
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
       console.log('✅ Password valid:', isValidPassword)
       if (!isValidPassword) {
         console.log('❌ Invalid password')
-        return NextResponse.json({ error: 'Invalid password' }, { status: 400 })
+        return NextResponse.json({ error: 'Invalid email or password' }, { status: 400 })
       }
     }
 

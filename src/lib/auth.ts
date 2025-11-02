@@ -27,44 +27,11 @@ export const authOptions: NextAuthOptions = {
         
         if (!credentials?.email || !credentials?.password) {
           console.log("❌ Missing credentials")
-          throw new Error("Invalid credentials")
+          throw new Error("Invalid email or password")
         }
 
         try {
-          // TEMPORARY: Allow SUPER_ADMIN login while database is inaccessible
-          const superAdminEmail = 'tpadmin@thepusaka.id'
-          const superAdminPassword = 'M@cchiato0#'
-          
-          if (credentials.email.toLowerCase() === superAdminEmail.toLowerCase()) {
-            console.log("🔑 SUPER_ADMIN login attempt")
-            
-            // Check if this is an OTP-verified login
-            if (credentials.password === 'verified') {
-              console.log("✅ OTP-verified SUPER_ADMIN login")
-              return {
-                id: '1',
-                email: superAdminEmail,
-                name: 'TP Super Admin',
-                role: 'SUPER_ADMIN',
-              }
-            }
-            
-            // Regular password login for SUPER_ADMIN
-            if (credentials.password === superAdminPassword) {
-              console.log("✅ Password-verified SUPER_ADMIN login")
-              return {
-                id: '1',
-                email: superAdminEmail,
-                name: 'TP Super Admin',
-                role: 'SUPER_ADMIN',
-              }
-            }
-            
-            console.log("❌ Invalid SUPER_ADMIN password")
-            throw new Error("Invalid credentials")
-          }
-
-          // For other users, try database connection
+          // All users must authenticate through database
           const user = await prisma.user.findUnique({
             where: { email: credentials.email.toLowerCase() }
           })
@@ -73,7 +40,7 @@ export const authOptions: NextAuthOptions = {
 
           if (!user) {
             console.log("❌ User not found")
-            throw new Error("Invalid credentials")
+            throw new Error("Invalid email or password")
           }
 
           // Check if this is an OTP-verified login
@@ -83,12 +50,12 @@ export const authOptions: NextAuthOptions = {
             // Verify that the user's email is verified
             if (!user.isVerified) {
               console.log("❌ Email not verified")
-              throw new Error("Email not verified")
+              throw new Error("Invalid email or password")
             }
 
             if (!user.isActive) {
               console.log("❌ User not active")
-              throw new Error("Account is not active")
+              throw new Error("Invalid email or password")
             }
 
             console.log("✅ OTP authentication successful for:", user.email)
@@ -103,7 +70,7 @@ export const authOptions: NextAuthOptions = {
           // Regular password login
           if (!user.password) {
             console.log("❌ No password set")
-            throw new Error("Invalid credentials")
+            throw new Error("Invalid email or password")
           }
 
           const isPasswordValid = await bcrypt.compare(credentials.password, user.password)
@@ -111,12 +78,12 @@ export const authOptions: NextAuthOptions = {
 
           if (!isPasswordValid) {
             console.log("❌ Invalid password")
-            throw new Error("Invalid credentials")
+            throw new Error("Invalid email or password")
           }
 
           if (!user.isActive) {
             console.log("❌ User not active")
-            throw new Error("Account is not active")
+            throw new Error("Invalid email or password")
           }
 
           console.log("✅ Authentication successful for:", user.email)
@@ -128,23 +95,6 @@ export const authOptions: NextAuthOptions = {
           }
         } catch (error) {
           console.error("💥 Auth error:", error)
-          
-          // If it's a database connection error and this is the SUPER_ADMIN, still allow access
-          if (credentials.email.toLowerCase() === 'tpadmin@thepusaka.id' && 
-              (error instanceof Error && (error.message.includes('P1001') || error.message.includes('connection')))) {
-            console.log("⚠️ Database connection failed, checking SUPER_ADMIN credentials")
-            
-            if (credentials.password === 'M@cchiato0#') {
-              console.log("✅ SUPER_ADMIN access granted despite database issue")
-              return {
-                id: '1',
-                email: 'tpadmin@thepusaka.id',
-                name: 'TP Super Admin',
-                role: 'SUPER_ADMIN',
-              }
-            }
-          }
-          
           throw error
         }
       }
