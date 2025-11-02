@@ -44,7 +44,7 @@ export default function UserManagement() {
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch('/api/admin/users-working')
+      const response = await fetch('/api/admin/users')
       if (response.ok) {
         const data = await response.json()
         setUsers(data)
@@ -59,7 +59,7 @@ export default function UserManagement() {
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      const response = await fetch('/api/admin/users-working', {
+      const response = await fetch('/api/admin/users', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -83,7 +83,7 @@ export default function UserManagement() {
 
   const handleUpdateUser = async (userId: string, updates: Partial<User>) => {
     try {
-      const response = await fetch(`/api/admin/users-working/${userId}`, {
+      const response = await fetch(`/api/admin/users/${userId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -108,7 +108,7 @@ export default function UserManagement() {
     if (!confirm('Are you sure you want to delete this user?')) return
 
     try {
-      const response = await fetch(`/api/admin/users-working/${userId}`, {
+      const response = await fetch(`/api/admin/users/${userId}`, {
         method: 'DELETE',
       })
 

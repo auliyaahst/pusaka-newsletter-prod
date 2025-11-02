@@ -79,7 +79,7 @@ export default function AddArticle({ onClose, onSuccess }: AddArticleProps) {
     setIsSubmitting(true)
 
     try {
-      const response = await fetch('/api/editorial/articles-working', {
+      const response = await fetch('/api/editorial/articles', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

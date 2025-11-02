@@ -433,9 +433,6 @@ export default function DashboardPage() {
   }
 
   if (!session) {
-    console.log('❌ Dashboard: No session found, redirecting to login')
-    // Redirect to login if no session
-    router.push('/login')
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
