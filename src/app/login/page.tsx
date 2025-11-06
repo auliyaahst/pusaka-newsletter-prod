@@ -215,7 +215,7 @@ function LoginPageContent() {
                     }}
                     className="w-full flex justify-center py-2 px-4 border rounded-md shadow-sm text-sm font-medium hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {isLoading ? 'Sending Code...' : 'Continue with Email'}
+                    {isLoading ? 'Logging in...' : 'Continue with Email'}
                   </button>
                 </form>
 

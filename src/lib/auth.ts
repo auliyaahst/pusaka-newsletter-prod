@@ -1,16 +1,13 @@
 import NextAuth, { NextAuthOptions } from "next-auth"
+import { PrismaAdapter } from "@next-auth/prisma-adapter"
 import GoogleProvider from "next-auth/providers/google"
 import CredentialsProvider from "next-auth/providers/credentials"
+import { prisma } from "./prisma"
 import bcrypt from "bcryptjs"
-import { prisma } from '@/lib/prisma'
 
 // Configure NextAuth
 export const authOptions: NextAuthOptions = {
-  // TEMPORARY: Disable PrismaAdapter to avoid database dependency
-  // adapter: PrismaAdapter(prisma),
-  session: {
-    strategy: "jwt", // Use JWT instead of database sessions
-  },
+  adapter: PrismaAdapter(prisma),
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -27,38 +24,33 @@ export const authOptions: NextAuthOptions = {
         
         if (!credentials?.email || !credentials?.password) {
           console.log("❌ Missing credentials")
-          throw new Error("Invalid email or password")
+          throw new Error("Invalid credentials")
         }
 
         try {
-          // All users must authenticate through database
           const user = await prisma.user.findUnique({
-            where: { email: credentials.email.toLowerCase() }
+            where: { email: credentials.email }
           })
 
           console.log("👤 User found:", user ? "Yes" : "No")
 
           if (!user) {
             console.log("❌ User not found")
-            throw new Error("Invalid email or password")
+            throw new Error("Invalid credentials")
           }
 
-          // Check if this is an OTP-verified login
+          // Check for OTP-verified login (special case)
           if (credentials.password === 'verified') {
-            console.log("🔑 OTP-verified login")
-            
-            // Verify that the user's email is verified
+            console.log("🔓 OTP-verified login detected")
             if (!user.isVerified) {
-              console.log("❌ Email not verified")
-              throw new Error("Invalid email or password")
+              console.log("❌ User not verified")
+              throw new Error("Account not verified")
             }
-
             if (!user.isActive) {
               console.log("❌ User not active")
-              throw new Error("Invalid email or password")
+              throw new Error("Account is not active")
             }
-
-            console.log("✅ OTP authentication successful for:", user.email)
+            console.log("✅ OTP-verified authentication successful for:", user.email)
             return {
               id: user.id,
               email: user.email,
@@ -70,20 +62,24 @@ export const authOptions: NextAuthOptions = {
           // Regular password login
           if (!user.password) {
             console.log("❌ No password set")
-            throw new Error("Invalid email or password")
+            throw new Error("Invalid credentials")
           }
 
-          const isPasswordValid = await bcrypt.compare(credentials.password, user.password)
+          const isPasswordValid = await bcrypt.compare(
+            credentials.password,
+            user.password
+          )
+
           console.log("🔑 Password valid:", isPasswordValid)
 
           if (!isPasswordValid) {
             console.log("❌ Invalid password")
-            throw new Error("Invalid email or password")
+            throw new Error("Invalid credentials")
           }
 
           if (!user.isActive) {
             console.log("❌ User not active")
-            throw new Error("Invalid email or password")
+            throw new Error("Account is not active")
           }
 
           console.log("✅ Authentication successful for:", user.email)
@@ -104,81 +100,115 @@ export const authOptions: NextAuthOptions = {
     signIn: "/login",
     error: "/login",
   },
+  session: {
+    strategy: "jwt",
+  },
   callbacks: {
     async signIn({ user, account, profile }) {
-      console.log("🔐 SignIn Callback - provider:", account?.provider, "email:", user.email)
+      console.log('🔐 SignIn callback:', { 
+        email: user.email, 
+        provider: account?.provider,
+        profileEmail: profile?.email 
+      })
       
       if (account?.provider === 'google') {
-        console.log("🔍 Google OAuth sign-in, checking database for user")
         try {
-          // Check if user exists in database
-          const dbUser = await prisma.user.findUnique({
-            where: { email: user.email?.toLowerCase() }
+          // Find existing user in database
+          const existingUser = await prisma.user.findUnique({
+            where: { email: user.email! }
           })
           
-          if (dbUser) {
-            console.log("👤 Google OAuth user found in database:", dbUser.email, "role:", dbUser.role)
-            // Update the user object with database information
-            user.id = dbUser.id
-            user.role = dbUser.role
-            user.name = dbUser.name || user.name
+          console.log('👤 Google OAuth - User lookup:', { 
+            email: user.email, 
+            userExists: !!existingUser,
+            userRole: existingUser?.role 
+          })
+          
+          if (existingUser) {
+            // Update user info but preserve role
+            await prisma.user.update({
+              where: { email: user.email! },
+              data: {
+                name: user.name || existingUser.name,
+                image: user.image || existingUser.image,
+                isVerified: true
+              }
+            })
+            console.log('✅ Google OAuth - Existing user updated')
             return true
           } else {
-            console.log("❌ Google OAuth user not found in database:", user.email)
-            // For security, don't allow Google sign-in for users not in database
-            return false
+            console.log('❌ Google OAuth - User not found in database')
+            return false // Don't allow login if user doesn't exist
           }
         } catch (error) {
-          console.error("💥 Database error during Google OAuth:", error)
+          console.error('❌ Google OAuth error:', error)
           return false
         }
       }
-      
       return true
     },
-    async jwt({ token, user }) {
-      console.log("🎫 JWT Callback - token:", !!token, "user:", !!user)
+    async jwt({ token, user, account }) {
+      console.log('🔑 NextAuth JWT callback:', { 
+        hasUser: !!user, 
+        tokenId: token.id, 
+        userRole: user?.role,
+        tokenRole: token.role,
+        provider: account?.provider 
+      })
+      
       if (user) {
-        console.log("👤 Adding user to token:", user.email, user.role)
         token.id = user.id
         token.role = user.role
+        console.log('✅ JWT token updated with user data:', { id: token.id, role: token.role })
+      } else if (token.email && !token.role) {
+        // Fetch role from database if not in token (for Google OAuth)
+        try {
+          const dbUser = await prisma.user.findUnique({
+            where: { email: token.email as string },
+            select: { id: true, role: true, isActive: true, isVerified: true }
+          })
+          
+          console.log('🔍 JWT - Fetched user from DB:', { 
+            email: token.email, 
+            role: dbUser?.role,
+            isActive: dbUser?.isActive 
+          })
+          
+          if (dbUser) {
+            token.id = dbUser.id
+            token.role = dbUser.role
+            token.isActive = dbUser.isActive
+            token.isVerified = dbUser.isVerified
+            console.log('✅ JWT token updated with DB data:', { id: token.id, role: token.role })
+          }
+        } catch (error) {
+          console.error('❌ JWT DB lookup error:', error)
+        }
       }
+      
       return token
     },
     async session({ session, token }) {
-      console.log("🔐 Session Callback - session:", !!session, "token:", !!token)
+      console.log('👤 NextAuth session callback:', { 
+        hasToken: !!token, 
+        hasSessionUser: !!session.user,
+        tokenId: token.id,
+        tokenRole: token.role,
+        tokenIsActive: token.isActive 
+      })
       if (token && session.user) {
-        console.log("✅ Adding token data to session:", token.id, token.role)
         session.user.id = token.id as string
         session.user.role = token.role as string
+        session.user.isActive = token.isActive as boolean
+        session.user.isVerified = token.isVerified as boolean
+        console.log('✅ Session updated with token data:', { 
+          userId: session.user.id, 
+          userRole: session.user.role,
+          userEmail: session.user.email,
+          isActive: session.user.isActive 
+        })
       }
       return session
-    },
-    async redirect({ url, baseUrl }) {
-      console.log("🔄 Redirect Callback - url:", url, "baseUrl:", baseUrl)
-      console.log("🌐 NEXTAUTH_URL:", process.env.NEXTAUTH_URL)
-      console.log("🔗 Current URL parts:", { url, baseUrl })
-      
-      // Handle Google OAuth callback
-      if (url.includes('/api/auth/callback/google')) {
-        console.log("📱 Google OAuth callback detected")
-        return `${baseUrl}/dashboard`
-      }
-      
-      // Always redirect to dashboard after successful login
-      if (url.startsWith("/") && !url.includes("/login")) {
-        console.log("📍 Redirecting to dashboard from relative URL")
-        return `${baseUrl}/dashboard`
-      }
-      
-      // If it's a login page, redirect to dashboard
-      if (url.includes("/login") || url === baseUrl) {
-        console.log("🏠 Redirecting to dashboard from login/home")
-        return `${baseUrl}/dashboard`
-      }
-      
-      console.log("↩️ Default redirect logic")
-      return url.startsWith(baseUrl) ? url : `${baseUrl}/dashboard`
     },
   },
   debug: true,
