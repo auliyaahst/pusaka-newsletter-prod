@@ -5,6 +5,14 @@ import bcrypt from 'bcryptjs'
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('🚀 Send OTP API called - Start processing')
+    
+    // Check email configuration first
+    if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
+      console.error('❌ Gmail credentials missing')
+      return NextResponse.json({ error: 'Email service not configured' }, { status: 500 })
+    }
+    
     const { email, type, password } = await request.json()
     console.log('🚀 Send OTP API called - email:', email, 'type:', type)
 
@@ -91,8 +99,14 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('📧 Sending OTP email')
-    // Send OTP email
-    const emailResult = await sendOTPEmail(email, otp, type)
+    // Send OTP email with timeout
+    const emailResult = await Promise.race([
+      sendOTPEmail(email, otp, type),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Email timeout')), 30000) // 30 second timeout
+      )
+    ]) as { success: boolean; error?: string }
+    
     console.log('📤 Email send result:', emailResult)
     
     if (!emailResult.success) {

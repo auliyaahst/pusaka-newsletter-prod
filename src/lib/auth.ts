@@ -105,6 +105,37 @@ export const authOptions: NextAuthOptions = {
     error: "/login",
   },
   callbacks: {
+    async signIn({ user, account, profile }) {
+      console.log("🔐 SignIn Callback - provider:", account?.provider, "email:", user.email)
+      
+      if (account?.provider === 'google') {
+        console.log("🔍 Google OAuth sign-in, checking database for user")
+        try {
+          // Check if user exists in database
+          const dbUser = await prisma.user.findUnique({
+            where: { email: user.email?.toLowerCase() }
+          })
+          
+          if (dbUser) {
+            console.log("👤 Google OAuth user found in database:", dbUser.email, "role:", dbUser.role)
+            // Update the user object with database information
+            user.id = dbUser.id
+            user.role = dbUser.role
+            user.name = dbUser.name || user.name
+            return true
+          } else {
+            console.log("❌ Google OAuth user not found in database:", user.email)
+            // For security, don't allow Google sign-in for users not in database
+            return false
+          }
+        } catch (error) {
+          console.error("💥 Database error during Google OAuth:", error)
+          return false
+        }
+      }
+      
+      return true
+    },
     async jwt({ token, user }) {
       console.log("🎫 JWT Callback - token:", !!token, "user:", !!user)
       if (user) {

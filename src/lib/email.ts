@@ -5,7 +5,11 @@ const transporter = nodemailer.createTransport({
   auth: {
     user: process.env.GMAIL_USER,
     pass: process.env.GMAIL_APP_PASSWORD
-  }
+  },
+  // Add timeout settings to prevent hanging
+  connectionTimeout: 30000, // 30 seconds
+  greetingTimeout: 10000,   // 10 seconds
+  socketTimeout: 60000      // 60 seconds
 })
 
 export async function sendOTPEmail(email: string, otp: string, type: 'login' | 'register') {
@@ -67,10 +71,16 @@ export async function sendOTPEmail(email: string, otp: string, type: 'login' | '
   }
 
   try {
-    await transporter.sendMail(mailOptions)
+    console.log('📧 Attempting to send email to:', email)
+    console.log('📨 Using Gmail account:', process.env.GMAIL_USER)
+    
+    const info = await transporter.sendMail(mailOptions)
+    console.log('✅ Email sent successfully:', info.messageId)
     return { success: true }
   } catch (error) {
-    console.error('Email sending failed:', error)
+    console.error('💥 Email sending failed:', error)
+    console.error('📧 GMAIL_USER configured:', !!process.env.GMAIL_USER)
+    console.error('🔐 GMAIL_APP_PASSWORD configured:', !!process.env.GMAIL_APP_PASSWORD)
     return { success: false, error: 'Failed to send email' }
   }
 }
