@@ -56,6 +56,8 @@ export const authOptions: NextAuthOptions = {
               email: user.email,
               name: user.name,
               role: user.role,
+              isActive: user.isActive,
+              isVerified: user.isVerified,
             }
           }
 
@@ -88,6 +90,8 @@ export const authOptions: NextAuthOptions = {
             email: user.email,
             name: user.name,
             role: user.role,
+            isActive: user.isActive,
+            isVerified: user.isVerified,
           }
         } catch (error) {
           console.error("💥 Auth error:", error)

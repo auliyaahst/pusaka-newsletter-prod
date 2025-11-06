@@ -6,16 +6,22 @@ declare module "next-auth" {
     user: {
       id: string
       role: string
+      isActive: boolean
+      isVerified: boolean
     } & DefaultSession["user"]
   }
 
   interface User extends DefaultUser {
     role: string
+    isActive: boolean
+    isVerified: boolean
   }
 }
 
 declare module "next-auth/jwt" {
   interface JWT extends DefaultJWT {
     role: string
+    isActive: boolean
+    isVerified: boolean
   }
 }
