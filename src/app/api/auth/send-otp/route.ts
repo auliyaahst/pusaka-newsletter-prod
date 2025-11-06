@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
     // Generate OTP
     console.log('🎲 Generating OTP')
     const otp = generateOTP()
-    const otpExpiry = new Date(Date.now() + 1 * 60 * 1000) // 1 minute
+    const otpExpiry = new Date(Date.now() + 5 * 60 * 1000) // 5 minutes
     console.log('⏰ OTP expiry set to:', otpExpiry)
 
     if (type === 'register') {
