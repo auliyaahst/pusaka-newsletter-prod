@@ -642,7 +642,7 @@ export default function PublisherEditionManagement() {
                   )}
                 </div>
 
-                <div className="flex items-center space-x-2">
+                {/* <div className="flex items-center space-x-2">
                   <input
                     type="checkbox"
                     id="isPublished"
@@ -653,7 +653,7 @@ export default function PublisherEditionManagement() {
                   <label htmlFor="isPublished" className="text-xs sm:text-sm font-medium text-gray-700">
                     Publish immediately
                   </label>
-                </div>
+                </div> */}
 
                 <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 pt-4">
                   <button
