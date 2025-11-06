@@ -310,8 +310,8 @@ export default function PublisherEditionManagement() {
 
     try {
       const url = editingEdition 
-        ? `/api/publisher/editions/${editingEdition.id}`
-        : '/api/publisher/editions'
+        ? `/api/editorial/editions/${editingEdition.id}`
+        : '/api/editorial/editions'
       
       const response = await fetch(url, {
         method: editingEdition ? 'PUT' : 'POST',
@@ -350,7 +350,7 @@ export default function PublisherEditionManagement() {
     }
 
     try {
-      const response = await fetch(`/api/publisher/editions/${editionId}`, {
+      const response = await fetch(`/api/editorial/editions/${editionId}`, {
         method: 'DELETE',
       })
 
@@ -373,7 +373,7 @@ export default function PublisherEditionManagement() {
   const togglePublished = async (editionId: string, currentStatus: boolean, e: React.MouseEvent) => {
     e.stopPropagation()
     try {
-      const response = await fetch(`/api/publisher/editions/${editionId}`, {
+      const response = await fetch(`/api/editorial/editions/${editionId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

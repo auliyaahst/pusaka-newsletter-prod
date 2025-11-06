@@ -57,7 +57,14 @@ export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions)
     
+    console.log('📝 POST /api/editorial/editions - Session:', {
+      user: session?.user?.email,
+      role: session?.user?.role,
+      hasSession: !!session?.user
+    })
+    
     if (!session?.user) {
+      console.log('❌ No session found')
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -65,7 +72,17 @@ export async function POST(request: Request) {
     }
 
     // Editors, Publishers and above can create editions
-    if (!['EDITOR', 'PUBLISHER', 'ADMIN', 'SUPER_ADMIN'].includes(session.user.role || '')) {
+    const allowedRoles = ['EDITOR', 'PUBLISHER', 'ADMIN', 'SUPER_ADMIN']
+    const userRole = session.user.role || ''
+    
+    console.log('🔐 Role check:', {
+      userRole,
+      allowedRoles,
+      isAllowed: allowedRoles.includes(userRole)
+    })
+    
+    if (!allowedRoles.includes(userRole)) {
+      console.log('❌ Role not allowed:', userRole)
       return NextResponse.json(
         { error: 'Forbidden - Editor access required' },
         { status: 403 }
@@ -75,7 +92,16 @@ export async function POST(request: Request) {
     const body = await request.json()
     const { title, description, publishDate, editionNumber, theme } = body
 
+    console.log('📊 Request body:', {
+      title,
+      description,
+      publishDate,
+      editionNumber,
+      theme
+    })
+
     if (!title || !publishDate) {
+      console.log('❌ Missing required fields:', { title: !!title, publishDate: !!publishDate })
       return NextResponse.json(
         { error: 'Title and publish date are required' },
         { status: 400 }
@@ -84,11 +110,13 @@ export async function POST(request: Request) {
 
     // Check if edition number already exists
     if (editionNumber) {
+      console.log('🔍 Checking if edition number exists:', editionNumber)
       const existingEdition = await prisma.edition.findFirst({
         where: { editionNumber: parseInt(editionNumber) }
       })
       
       if (existingEdition) {
+        console.log('❌ Edition number already exists:', editionNumber)
         return NextResponse.json(
           { error: 'Edition number already exists' },
           { status: 400 }
@@ -96,6 +124,7 @@ export async function POST(request: Request) {
       }
     }
 
+    console.log('💾 Creating new edition...')
     const edition = await prisma.edition.create({
       data: {
         title,
@@ -115,6 +144,7 @@ export async function POST(request: Request) {
       },
     })
 
+    console.log('✅ Edition created successfully:', edition.id)
     return NextResponse.json(
       { 
         message: 'Edition created successfully',
@@ -123,7 +153,11 @@ export async function POST(request: Request) {
       { status: 201 }
     )
   } catch (error) {
-    console.error('Error creating edition:', error)
+    console.error('💥 Error creating edition:', error)
+    console.error('📊 Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined
+    })
     return NextResponse.json(
       { error: 'Failed to create edition' },
       { status: 500 }
