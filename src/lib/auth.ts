@@ -20,7 +20,7 @@ export const authOptions: NextAuthOptions = {
         }
       },
       httpOptions: {
-        timeout: 90000, // Further increased to 90 seconds for problematic networks
+        timeout: 90000, // Increased to 90 seconds for better reliability
       },
     }),
     CredentialsProvider({
