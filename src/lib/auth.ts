@@ -20,7 +20,7 @@ export const authOptions: NextAuthOptions = {
         }
       },
       httpOptions: {
-        timeout: 60000, // Increased to 60 seconds for better reliability
+        timeout: 90000, // Further increased to 90 seconds for problematic networks
       },
     }),
     CredentialsProvider({
@@ -274,6 +274,15 @@ export const authOptions: NextAuthOptions = {
   logger: {
     error(code, ...message) {
       console.error("NextAuth Error:", code, ...message)
+      // Enhanced logging for OAuth timeout issues
+      if (code === 'SIGNIN_OAUTH_ERROR' || code === 'OAUTH_CALLBACK_ERROR') {
+        console.error('OAuth Error Details:', {
+          timestamp: new Date().toISOString(),
+          code,
+          message: message[0]?.message || 'No message',
+          stack: message[0]?.stack || 'No stack trace'
+        })
+      }
     },
     warn(code, ...message) {
       console.warn("NextAuth Warning:", code, ...message)
