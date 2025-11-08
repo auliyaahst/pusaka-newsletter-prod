@@ -21,7 +21,7 @@ echo ""
 
 echo "🚪 Testing HTTP/HTTPS Connectivity:"
 echo "-----------------------------------"
-curl -I -m 10 https://oauth2.googleapis.com/.well-known/openid_configuration
+curl -I -m 10 https://accounts.google.com/.well-known/openid-configuration
 curl -I -m 10 https://accounts.google.com
 echo ""
 
@@ -29,7 +29,7 @@ echo "🔍 Testing from Node.js (same as app):"
 echo "--------------------------------------"
 node -e "
 const https = require('https');
-const url = 'https://oauth2.googleapis.com/.well-known/openid_configuration';
+const url = 'https://accounts.google.com/.well-known/openid-configuration';
 console.log('Testing:', url);
 https.get(url, {timeout: 10000}, (res) => {
   console.log('✅ Success:', res.statusCode, res.statusMessage);

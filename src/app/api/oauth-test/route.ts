@@ -10,7 +10,8 @@ export async function GET() {
         const controller = new AbortController()
         const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
         
-        const response = await fetch('https://oauth2.googleapis.com/.well-known/openid_configuration', {
+        // Use the correct Google OAuth discovery endpoint
+        const response = await fetch('https://accounts.google.com/.well-known/openid-configuration', {
           signal: controller.signal,
           headers: {
             'User-Agent': 'NextAuth-Test/1.0'
