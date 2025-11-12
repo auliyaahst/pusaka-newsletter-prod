@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import toast from 'react-hot-toast'
 import { EnhancedEditor } from '../tiptap-templates/enhanced'
+import toast from 'react-hot-toast'
 
 interface Edition {
   id: string

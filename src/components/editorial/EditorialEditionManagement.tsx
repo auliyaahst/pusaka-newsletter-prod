@@ -32,7 +32,7 @@ interface Edition {
   articles?: Article[]
 }
 
-export default function PublisherEditionManagement() {
+export default function EditorialEditionManagement() {
   const [editions, setEditions] = useState<Edition[]>([])
   const [loading, setLoading] = useState(true)
   const [showAddForm, setShowAddForm] = useState(false)
@@ -315,7 +315,7 @@ export default function PublisherEditionManagement() {
         : '/api/editorial/editions'
       
       const response = await fetch(url, {
-        method: editingEdition ? 'PUT' : 'POST',
+        method: editingEdition ? 'PATCH' : 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -346,42 +346,9 @@ export default function PublisherEditionManagement() {
 
   const handleDelete = async (editionId: string, title: string, e: React.MouseEvent) => {
     e.stopPropagation()
-    
-    const confirmed = await new Promise((resolve) => {
-      toast((t) => (
-        <div className="flex flex-col space-y-3">
-          <div className="text-sm font-medium">Delete Edition</div>
-          <div className="text-sm text-gray-600">
-            Are you sure you want to delete "{title}"? This action cannot be undone.
-          </div>
-          <div className="flex space-x-2">
-            <button
-              onClick={() => {
-                toast.dismiss(t.id)
-                resolve(true)
-              }}
-              className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
-            >
-              Delete
-            </button>
-            <button
-              onClick={() => {
-                toast.dismiss(t.id)
-                resolve(false)
-              }}
-              className="px-3 py-1 bg-gray-300 text-gray-700 rounded text-sm hover:bg-gray-400"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      ), {
-        duration: Infinity,
-        style: { background: 'white', color: 'black' }
-      })
-    })
-
-    if (!confirmed) return
+    if (!confirm(`Are you sure you want to delete "${title}"? This action cannot be undone.`)) {
+      return
+    }
 
     try {
       const response = await fetch(`/api/editorial/editions/${editionId}`, {

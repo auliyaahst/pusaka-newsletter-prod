@@ -33,7 +33,18 @@ export async function GET(request: NextRequest) {
         { updatedAt: 'desc' },
         { createdAt: 'desc' },
       ],
-      include: {
+      select: {
+        id: true,
+        title: true,
+        excerpt: true,
+        slug: true,
+        status: true,
+        publishedAt: true,
+        createdAt: true,
+        updatedAt: true,
+        featured: true,
+        readTime: true,
+        editionId: true,
         author: {
           select: {
             name: true,
@@ -45,19 +56,6 @@ export async function GET(request: NextRequest) {
             id: true,
             title: true,
             publishDate: true,
-          },
-        },
-        reviewNotes: {
-          include: {
-            reviewer: {
-              select: {
-                name: true,
-                email: true,
-              },
-            },
-          },
-          orderBy: {
-            createdAt: 'desc',
           },
         },
       },
@@ -80,17 +78,23 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  console.log('📝 POST /api/editorial/articles - Creating new article')
+  
   try {
     const session = await getServerSession(authOptions)
+    console.log('👤 Session check - User:', session?.user?.email, 'Role:', session?.user?.role)
     
     if (!session?.user?.role || (session.user.role !== 'EDITOR' && session.user.role !== 'SUPER_ADMIN')) {
+      console.log('❌ Unauthorized - User role:', session?.user?.role, 'Required: EDITOR/SUPER_ADMIN')
       return NextResponse.json(
         { error: 'Unauthorized - Editor access required' },
         { status: 403 }
       )
     }
 
+    console.log('✅ Authorization passed - User can create articles')
     const body = await request.json()
+    console.log('📝 Request body:', JSON.stringify(body, null, 2))
     const {
       title,
       content,
@@ -104,25 +108,45 @@ export async function POST(request: NextRequest) {
       status
     } = body
 
+    console.log('📊 Creating article with data:', { 
+      title, 
+      slug, 
+      editionId, 
+      featured, 
+      status: status || 'DRAFT',
+      contentLength: content?.length || 0,
+      excerptLength: excerpt?.length || 0 
+    })
+
     // Validate required fields
     if (!title || !content || !slug) {
+      console.log('❌ Validation failed - Missing required fields:', { 
+        title: !!title, 
+        content: !!content, 
+        slug: !!slug 
+      })
       return NextResponse.json(
         { error: 'Title, content, and slug are required' },
         { status: 400 }
       )
     }
 
+    console.log('🔍 Checking for existing slug:', slug)
     // Check if slug already exists
     const existingArticle = await prisma.article.findUnique({
       where: { slug }
     })
 
     if (existingArticle) {
+      console.log('❌ Slug conflict - Article with slug already exists:', slug)
       return NextResponse.json(
         { error: 'An article with this slug already exists' },
         { status: 400 }
       )
     }
+
+    console.log('✅ Slug is available, proceeding with article creation')
+    console.log('💾 Creating article in database...')
 
     // Create the article
     const article = await prisma.article.create({
@@ -156,12 +180,27 @@ export async function POST(request: NextRequest) {
       },
     })
 
+    console.log('✅ Article created successfully:', {
+      id: article.id,
+      title: article.title,
+      slug: article.slug,
+      status: article.status,
+      featured: article.featured,
+      authorId: article.authorId,
+      editionId: article.editionId,
+      authorName: article.author?.name || 'Unknown'
+    })
+
     return NextResponse.json({ 
       article,
       message: 'Article created successfully' 
     }, { status: 201 })
   } catch (error) {
-    console.error('Error creating article:', error)
+    console.error('💥 Error creating article:', error)
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined
+    })
     return NextResponse.json(
       { error: 'Failed to create article' },
       { status: 500 }

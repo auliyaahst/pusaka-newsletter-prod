@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import EditArticle from './EditArticle'
+import EditArticle from '@/components/editorial/EditArticle'
 
 interface Article {
   id: string
@@ -23,8 +23,10 @@ interface Article {
     email: string
   }
   edition?: {
+    id: string
     title: string
     publishDate: string
+    editionNumber: number
   }
   reviewNotes?: ReviewNote[]
 }
@@ -47,6 +49,28 @@ export default function ContentReview() {
   const [editingArticle, setEditingArticle] = useState<Article | null>(null)
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState<'UNDER_REVIEW' | 'REJECTED'>('UNDER_REVIEW')
+
+  const selectArticle = async (article: Article) => {
+    try {
+      setLoading(true)
+      // Fetch full article details including content
+      const response = await fetch(`/api/editorial/articles/${article.id}`)
+      if (response.ok) {
+        const data = await response.json()
+        setSelectedArticle(data.article)
+      } else {
+        console.error('Failed to fetch article details')
+        // Fallback to the article from the list (without content)
+        setSelectedArticle(article)
+      }
+    } catch (error) {
+      console.error('Error fetching article details:', error)
+      // Fallback to the article from the list (without content)
+      setSelectedArticle(article)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const fetchArticles = useCallback(async () => {
     try {
@@ -143,7 +167,7 @@ export default function ContentReview() {
                 {articles.map((article) => (
                   <button
                     key={article.id}
-                    onClick={() => setSelectedArticle(article)}
+                    onClick={() => selectArticle(article)}
                     className={`w-full p-4 text-left hover:bg-gray-50 focus:outline-none focus:bg-gray-50 ${
                       selectedArticle?.id === article.id ? 'bg-blue-50 border-r-2 border-blue-500' : ''
                     }`}

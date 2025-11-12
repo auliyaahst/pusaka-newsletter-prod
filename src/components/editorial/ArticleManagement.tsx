@@ -1,16 +1,16 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import toast from 'react-hot-toast'
 import AddArticle from './AddArticle'
 import EditArticle from './EditArticle'
+import toast from 'react-hot-toast'
 
 type ArticleStatus = 'DRAFT' | 'UNDER_REVIEW' | 'APPROVED' | 'PUBLISHED' | 'REJECTED' | 'ARCHIVED'
 
 interface Article {
   id: string
   title: string
-  content: string
+  content?: string
   excerpt: string
   slug: string
   status: ArticleStatus
@@ -19,15 +19,16 @@ interface Article {
   updatedAt: string
   featured: boolean
   readTime: number
-  metaTitle: string
-  metaDescription: string
-  contentType: string
+  metaTitle?: string
+  metaDescription?: string
+  contentType?: string
   editionId: string
   author?: {
     name: string
     email: string
   }
   edition?: {
+    id: string
     title: string
     publishDate: string
   }
@@ -63,14 +64,15 @@ export default function ArticleManagement() {
   const fetchArticles = async () => {
     try {
       const response = await fetch('/api/editorial/articles')
+      
       if (response.ok) {
         const data = await response.json()
-        setArticles(data.articles)
+        setArticles(data.articles || [])
       } else {
-        console.error('Failed to fetch articles')
+        console.error('❌ Failed to fetch articles, status:', response.status)
       }
     } catch (error) {
-      console.error('Error fetching articles:', error)
+      console.error('💥 Error fetching articles:', error)
     } finally {
       setLoading(false)
     }
@@ -101,41 +103,9 @@ export default function ArticleManagement() {
 
   const deleteArticle = async (articleId: string, articleTitle: string) => {
     // Confirm deletion
-    const confirmed = await new Promise((resolve) => {
-      toast((t) => (
-        <div className="flex flex-col space-y-3">
-          <div className="text-sm font-medium">Delete Article</div>
-          <div className="text-sm text-gray-600">
-            Are you sure you want to permanently delete "{articleTitle}"? This action cannot be undone.
-          </div>
-          <div className="flex space-x-2">
-            <button
-              onClick={() => {
-                toast.dismiss(t.id)
-                resolve(true)
-              }}
-              className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
-            >
-              Delete
-            </button>
-            <button
-              onClick={() => {
-                toast.dismiss(t.id)
-                resolve(false)
-              }}
-              className="px-3 py-1 bg-gray-300 text-gray-700 rounded text-sm hover:bg-gray-400"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      ), {
-        duration: Infinity,
-        style: { background: 'white', color: 'black' }
-      })
-    })
-
-    if (!confirmed) return
+    if (!confirm(`Are you sure you want to permanently delete the article "${articleTitle}"? This action cannot be undone.`)) {
+      return
+    }
 
     setIsUpdating(articleId)
     try {
@@ -159,41 +129,7 @@ export default function ArticleManagement() {
   }
 
     const archiveArticle = async (id: string) => {
-    const confirmed = await new Promise((resolve) => {
-      toast((t) => (
-        <div className="flex flex-col space-y-3">
-          <div className="text-sm font-medium">Archive Article</div>
-          <div className="text-sm text-gray-600">
-            Are you sure you want to archive this article?
-          </div>
-          <div className="flex space-x-2">
-            <button
-              onClick={() => {
-                toast.dismiss(t.id)
-                resolve(true)
-              }}
-              className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
-            >
-              Archive
-            </button>
-            <button
-              onClick={() => {
-                toast.dismiss(t.id)
-                resolve(false)
-              }}
-              className="px-3 py-1 bg-gray-300 text-gray-700 rounded text-sm hover:bg-gray-400"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      ), {
-        duration: Infinity,
-        style: { background: 'white', color: 'black' }
-      })
-    })
-    
-    if (!confirmed) return
+    if (!confirm('Are you sure you want to archive this article?')) return
     
     try {
       const response = await fetch(`/api/editorial/articles/${id}/archive`, {
@@ -213,41 +149,7 @@ export default function ArticleManagement() {
   }
 
   const unarchiveArticle = async (id: string) => {
-    const confirmed = await new Promise((resolve) => {
-      toast((t) => (
-        <div className="flex flex-col space-y-3">
-          <div className="text-sm font-medium">Unarchive Article</div>
-          <div className="text-sm text-gray-600">
-            Are you sure you want to unarchive this article?
-          </div>
-          <div className="flex space-x-2">
-            <button
-              onClick={() => {
-                toast.dismiss(t.id)
-                resolve(true)
-              }}
-              className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
-            >
-              Unarchive
-            </button>
-            <button
-              onClick={() => {
-                toast.dismiss(t.id)
-                resolve(false)
-              }}
-              className="px-3 py-1 bg-gray-300 text-gray-700 rounded text-sm hover:bg-gray-400"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      ), {
-        duration: Infinity,
-        style: { background: 'white', color: 'black' }
-      })
-    })
-    
-    if (!confirmed) return
+    if (!confirm('Are you sure you want to unarchive this article?')) return
     
     try {
       const response = await fetch(`/api/editorial/articles/${id}/unarchive`, {
@@ -446,8 +348,26 @@ export default function ArticleManagement() {
                             {/* Edit Action - Not available for archived articles */}
                             {/* {article.status !== 'ARCHIVED' && ( */}
                               <button
-                                onClick={() => {
-                                  setEditingArticle(article)
+                                onClick={async () => {
+                                  // Fetch the full article for editing
+                                  try {
+                                    console.log('🔍 ArticleManagement - Fetching article:', article.id)
+                                    const response = await fetch(`/api/editorial/articles/${article.id}`)
+                                    if (response.ok) {
+                                      const data = await response.json()
+                                      console.log('🔍 ArticleManagement - Fetched content length:', data.article?.content?.length || 0)
+                                      console.log('🔍 ArticleManagement - Fetched has images?', data.article?.content?.includes('data:image/') ? 'YES' : 'NO')
+                                      if (data.article?.content?.includes('data:image/')) {
+                                        const imageMatches = data.article.content.match(/data:image\/[^"]+/g) || []
+                                        console.log('🔍 ArticleManagement - Fetched', imageMatches.length, 'base64 images')
+                                      }
+                                      setEditingArticle(data.article)
+                                    } else {
+                                      console.error('Failed to fetch article details')
+                                    }
+                                  } catch (error) {
+                                    console.error('Error fetching article:', error)
+                                  }
                                   setOpenDropdown(null)
                                 }}
                                 className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-150"
@@ -549,9 +469,22 @@ export default function ArticleManagement() {
         />
       )}
       
-      {editingArticle && (
+      {editingArticle?.content && (
         <EditArticle
-          article={editingArticle}
+          article={editingArticle as {
+            id: string
+            title: string
+            content: string
+            excerpt: string
+            slug: string
+            status: string
+            featured: boolean
+            readTime: number
+            metaTitle: string
+            metaDescription: string
+            contentType: string
+            editionId: string
+          }}
           onClose={() => setEditingArticle(null)}
           onUpdate={fetchArticles}
         />

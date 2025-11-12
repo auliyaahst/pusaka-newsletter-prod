@@ -102,6 +102,18 @@ const ImageWithWrapping = Image.extend({
   addAttributes() {
     return {
       ...this.parent?.(),
+      src: {
+        default: null,
+        parseHTML: element => element.getAttribute('src'),
+        renderHTML: attributes => {
+          if (!attributes.src) {
+            return {}
+          }
+          return {
+            src: attributes.src,
+          }
+        },
+      },
       float: {
         default: 'none',
         renderHTML: attributes => {
@@ -130,6 +142,19 @@ const ImageWithWrapping = Image.extend({
         },
       },
     }
+  },
+
+  parseHTML() {
+    return [
+      {
+        tag: 'img[src]',
+        getAttrs: element => {
+          const src = element.getAttribute('src')
+          // Accept all image sources including base64
+          return src ? {} : false
+        },
+      },
+    ]
   },
 
   addNodeView() {
@@ -1115,6 +1140,8 @@ export const EnhancedEditorCKEditor = ({
         },
       }),
       ImageWithWrapping.configure({
+        inline: false,
+        allowBase64: true,
         HTMLAttributes: {
           class: 'editor-image',
         },
@@ -1172,7 +1199,60 @@ export const EnhancedEditorCKEditor = ({
 
   React.useEffect(() => {
     if (editor && value !== editor.getHTML()) {
-      editor.commands.setContent(value || "")
+      // 📝 Debug: Log content setting in Enhanced Editor
+      console.log('📝 EnhancedEditor - Setting new content')
+      console.log('📝 EnhancedEditor - Incoming value length:', value?.length || 0)
+      console.log('📝 EnhancedEditor - Incoming has images?', value?.includes('data:image/') ? 'YES' : 'NO')
+      console.log('📝 EnhancedEditor - Current editor HTML length:', editor.getHTML()?.length || 0)
+      console.log('📝 EnhancedEditor - Current editor has images?', editor.getHTML()?.includes('data:image/') ? 'YES' : 'NO')
+      
+      if (value?.includes('data:image/')) {
+        const incomingImages = value.match(/data:image\/[^"]+/g) || []
+        console.log('📝 EnhancedEditor - Incoming images:', incomingImages.length)
+        for (let i = 0; i < incomingImages.length; i++) {
+          console.log(`📝 EnhancedEditor - Incoming image ${i + 1} length:`, incomingImages[i].length)
+        }
+      }
+      
+      // Try multiple approaches to set content with images
+      try {
+        // Method 1: Direct setContent
+        editor.commands.setContent(value || "", false, { preserveWhitespace: 'full' })
+        
+        // Check if images were preserved
+        setTimeout(() => {
+          const currentHTML = editor.getHTML()
+          console.log('📝 EnhancedEditor - After setContent HTML length:', currentHTML?.length || 0)
+          console.log('📝 EnhancedEditor - After setContent has images?', currentHTML?.includes('data:image/') ? 'YES' : 'NO')
+          
+          // If images were lost, try alternative method
+          if (value?.includes('data:image/') && !currentHTML?.includes('data:image/')) {
+            console.log('📝 EnhancedEditor - Images lost! Trying alternative method...')
+            
+            // Method 2: Clear and insert HTML
+            editor.commands.clearContent()
+            editor.commands.insertContent(value || "")
+            
+            // Final check
+            setTimeout(() => {
+              const finalHTML = editor.getHTML()
+              console.log('📝 EnhancedEditor - After insertContent HTML length:', finalHTML?.length || 0)
+              console.log('📝 EnhancedEditor - After insertContent has images?', finalHTML?.includes('data:image/') ? 'YES' : 'NO')
+              if (finalHTML?.includes('data:image/')) {
+                const finalImages = finalHTML.match(/data:image\/[^"]+/g) || []
+                console.log('📝 EnhancedEditor - Final images preserved:', finalImages.length)
+              }
+            }, 50)
+          } else if (currentHTML?.includes('data:image/')) {
+            const afterImages = currentHTML.match(/data:image\/[^"]+/g) || []
+            console.log('📝 EnhancedEditor - Images preserved successfully:', afterImages.length)
+          }
+        }, 100)
+      } catch (error) {
+        console.error('📝 EnhancedEditor - Error setting content:', error)
+        // Fallback: try basic setContent
+        editor.commands.setContent(value || "")
+      }
     }
   }, [value, editor])
 

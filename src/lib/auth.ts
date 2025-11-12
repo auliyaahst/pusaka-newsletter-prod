@@ -12,16 +12,6 @@ export const authOptions: NextAuthOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      authorization: {
-        params: {
-          prompt: "consent",
-          access_type: "offline",
-          response_type: "code"
-        }
-      },
-      httpOptions: {
-        timeout: 90000, // Increased to 90 seconds for better reliability
-      },
     }),
     CredentialsProvider({
       name: "credentials",
@@ -66,8 +56,6 @@ export const authOptions: NextAuthOptions = {
               email: user.email,
               name: user.name,
               role: user.role,
-              isActive: user.isActive,
-              isVerified: user.isVerified,
             }
           }
 
@@ -100,8 +88,6 @@ export const authOptions: NextAuthOptions = {
             email: user.email,
             name: user.name,
             role: user.role,
-            isActive: user.isActive,
-            isVerified: user.isVerified,
           }
         } catch (error) {
           console.error("💥 Auth error:", error)
@@ -116,55 +102,31 @@ export const authOptions: NextAuthOptions = {
   },
   session: {
     strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    // maxAge: 15 * 60, // 15 minutes session timeout
   },
   callbacks: {
     async signIn({ user, account, profile }) {
-      console.log('🔐 SignIn callback started:', { 
+      console.log('🔐 SignIn callback:', { 
         email: user.email, 
         provider: account?.provider,
-        profileEmail: profile?.email,
-        timestamp: new Date().toISOString()
+        profileEmail: profile?.email 
       })
       
       if (account?.provider === 'google') {
         try {
-          const startTime = Date.now()
-          
-          // Find existing user in database with optimized query
+          // Find existing user in database
           const existingUser = await prisma.user.findUnique({
-            where: { email: user.email! },
-            select: {
-              id: true,
-              email: true,
-              name: true,
-              role: true,
-              image: true,
-              isActive: true,
-              isVerified: true
-            }
+            where: { email: user.email! }
           })
           
-          console.log('👤 Google OAuth - User lookup completed:', { 
+          console.log('👤 Google OAuth - User lookup:', { 
             email: user.email, 
             userExists: !!existingUser,
-            userRole: existingUser?.role,
-            duration: `${Date.now() - startTime}ms`
+            userRole: existingUser?.role 
           })
           
-          if (!existingUser) {
-            console.log('❌ Google OAuth - User not found in database')
-            return false // Don't allow login if user doesn't exist
-          }
-
-          // Only update if data has changed to avoid unnecessary DB writes
-          const needsUpdate = 
-            user.name !== existingUser.name || 
-            user.image !== existingUser.image || 
-            !existingUser.isVerified
-
-          if (needsUpdate) {
-            const updateStart = Date.now()
+          if (existingUser) {
+            // Update user info but preserve role
             await prisma.user.update({
               where: { email: user.email! },
               data: {
@@ -173,28 +135,14 @@ export const authOptions: NextAuthOptions = {
                 isVerified: true
               }
             })
-            console.log('✅ Google OAuth - User updated:', {
-              duration: `${Date.now() - updateStart}ms`
-            })
+            console.log('✅ Google OAuth - Existing user updated')
+            return true
           } else {
-            console.log('ℹ️ Google OAuth - No update needed')
+            console.log('❌ Google OAuth - User not found in database')
+            return false // Don't allow login if user doesn't exist
           }
-          
-          console.log('✅ Google OAuth - SignIn callback completed:', {
-            totalDuration: `${Date.now() - startTime}ms`
-          })
-          return true
-          
         } catch (error) {
           console.error('❌ Google OAuth error:', error)
-          // Enhanced error logging for debugging timeout issues
-          if (error instanceof Error) {
-            console.error('Error details:', {
-              message: error.message,
-              stack: error.stack,
-              name: error.name
-            })
-          }
           return false
         }
       }
@@ -212,18 +160,12 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id
         token.role = user.role
-        token.isActive = user.isActive
-        token.isVerified = user.isVerified
-        console.log('✅ JWT token updated with user data:', { 
-          id: token.id, 
-          role: token.role,
-          isActive: token.isActive 
-        })
+        console.log('✅ JWT token updated with user data:', { id: token.id, role: token.role })
       } else if (token.email && !token.role) {
         // Fetch role from database if not in token (for Google OAuth)
         try {
           const dbUser = await prisma.user.findUnique({
-            where: { email: token.email },
+            where: { email: token.email as string },
             select: { id: true, role: true, isActive: true, isVerified: true }
           })
           
@@ -256,10 +198,10 @@ export const authOptions: NextAuthOptions = {
         tokenIsActive: token.isActive 
       })
       if (token && session.user) {
-        session.user.id = String(token.id)
-        session.user.role = String(token.role)
-        session.user.isActive = Boolean(token.isActive)
-        session.user.isVerified = Boolean(token.isVerified)
+        session.user.id = token.id as string
+        session.user.role = token.role as string
+        session.user.isActive = token.isActive as boolean
+        session.user.isVerified = token.isVerified as boolean
         console.log('✅ Session updated with token data:', { 
           userId: session.user.id, 
           userRole: session.user.role,
@@ -274,15 +216,6 @@ export const authOptions: NextAuthOptions = {
   logger: {
     error(code, ...message) {
       console.error("NextAuth Error:", code, ...message)
-      // Enhanced logging for OAuth timeout issues
-      if (code === 'SIGNIN_OAUTH_ERROR' || code === 'OAUTH_CALLBACK_ERROR') {
-        console.error('OAuth Error Details:', {
-          timestamp: new Date().toISOString(),
-          code,
-          message: message[0]?.message || 'No message',
-          stack: message[0]?.stack || 'No stack trace'
-        })
-      }
     },
     warn(code, ...message) {
       console.warn("NextAuth Warning:", code, ...message)
