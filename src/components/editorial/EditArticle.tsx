@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { EnhancedEditor } from '../tiptap-templates/enhanced'
 import toast from 'react-hot-toast'
-import { SimpleEditor } from '../tiptap-templates/simple/simple-editor'
 
 interface Edition {
   id: string
@@ -17,27 +17,30 @@ interface Article {
   id: string
   title: string
   content: string
-  excerpt: string
+  excerpt: string | null
   slug: string
-  status: string
   featured: boolean
   readTime: number
-  metaTitle: string
-  metaDescription: string
-  contentType: string
-  editionId: string
+  metaTitle: string | null
+  metaDescription: string | null
+  status: string
+  editionId: string | null
+  edition?: {
+    id: string
+    title: string
+    editionNumber: number
+  }
 }
 
 interface EditArticleProps {
-  readonly article: Article
-  readonly onClose: () => void
-  readonly onUpdate: () => void
+  article: Article
+  onClose: () => void
+  onUpdate: () => void
 }
 
 export default function EditArticle({ article, onClose, onUpdate }: EditArticleProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [editions, setEditions] = useState<Edition[]>([])
-  const [submitAction, setSubmitAction] = useState<'save' | 'review'>('save')
   const [formData, setFormData] = useState({
     title: article.title,
     content: article.content,
@@ -45,9 +48,17 @@ export default function EditArticle({ article, onClose, onUpdate }: EditArticleP
     slug: article.slug,
     editionId: article.editionId || '',
     featured: article.featured,
-    readTime: article.readTime || 5,
+    readTime: article.readTime,
     metaTitle: article.metaTitle || '',
     metaDescription: article.metaDescription || ''
+  })
+  const [showCreateEdition, setShowCreateEdition] = useState(false)
+  const [editionFormData, setEditionFormData] = useState({
+    title: '',
+    description: '',
+    publishDate: '',
+    editionNumber: '',
+    theme: ''
   })
 
   useEffect(() => {
@@ -80,49 +91,39 @@ export default function EditArticle({ article, onClose, onUpdate }: EditArticleP
       ...prev,
       title,
       slug: generateSlug(title),
-      metaTitle: title
+      metaTitle: title || article.title
     }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Manual validation to prevent auto-submit issues
+    if (!formData.title.trim()) {
+      toast.error('Article title is required')
+      return
+    }
+    
+    if (!formData.content.trim()) {
+      toast.error('Article content is required')
+      return
+    }
+    
     setIsSubmitting(true)
 
     try {
-      // Prepare the update data
-      // const updateData = { ...formData }
-      const updateData: Record<string, unknown> = { ...formData }
-      let statusMessage = '✅ Article updated successfully!'
-      
-      // Handle status changes based on current status and selected action
-      if (article.status === 'REJECTED') {
-        if (submitAction === 'review') {
-          // Send directly for review
-          updateData.status = 'UNDER_REVIEW'
-          statusMessage = '✅ Article revised and sent for review!'
-        } else {
-          // Just save as draft for now
-          updateData.status = 'DRAFT'
-          statusMessage = '✅ Article saved as draft. You can send it for review when ready.'
-        }
-      } else if (submitAction === 'review' && (article.status === 'DRAFT' || article.status === 'REJECTED')) {
-        // Send for review from draft status
-        updateData.status = 'UNDER_REVIEW'
-        statusMessage = '✅ Article sent for review!'
-      }
-
       const response = await fetch(`/api/editorial/articles/${article.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(updateData),
+        body: JSON.stringify(formData),
       })
 
       if (response.ok) {
-        toast.success(statusMessage)
-        onUpdate()
+        toast.success('Article updated successfully!')
         onClose()
+        onUpdate()
       } else {
         const error = await response.json()
         toast.error(`Error: ${error.message || 'Failed to update article'}`)
@@ -135,6 +136,53 @@ export default function EditArticle({ article, onClose, onUpdate }: EditArticleP
     }
   }
 
+  const handleCreateEdition = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsSubmitting(true)
+
+    try {
+      const response = await fetch('/api/editorial/editions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...editionFormData,
+          editionNumber: editionFormData.editionNumber ? parseInt(editionFormData.editionNumber) : null
+        }),
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        toast.success('Edition created and published successfully!')
+        
+        // Refresh editions list
+        await fetchEditions()
+        
+        // Select the newly created edition
+        setFormData(prev => ({ ...prev, editionId: result.edition.id }))
+        
+        // Close the create edition form
+        setShowCreateEdition(false)
+        setEditionFormData({
+          title: '',
+          description: '',
+          publishDate: '',
+          editionNumber: '',
+          theme: ''
+        })
+      } else {
+        const error = await response.json()
+        toast.error(`Error: ${error.message || 'Failed to create edition'}`)
+      }
+    } catch (error) {
+      console.error('Error creating edition:', error)
+      toast.error('Error creating edition')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg max-w-5xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
@@ -142,16 +190,10 @@ export default function EditArticle({ article, onClose, onUpdate }: EditArticleP
           <div className="flex justify-between items-center mb-6">
             <div>
               <h3 className="text-xl font-semibold text-gray-900">✏️ Edit Article</h3>
-              <p className="text-sm text-gray-600 mt-1">Update the details below to modify your article. Fields marked with * are required.</p>
-              {article.status === 'REJECTED' && (
-                <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded-md">
-                  <p className="text-sm text-amber-700 flex items-center">
-                    🔄 <span className="ml-1">This article was rejected and needs revision. You can save as draft or send directly for review using the buttons below.</span>
-                  </p>
-                </div>
-              )}
+              <p className="text-sm text-gray-600 mt-1">Update the article details below. Fields marked with * are required.</p>
             </div>
             <button
+              type="button"
               onClick={onClose}
               className="text-gray-400 hover:text-gray-600 p-1 hover:bg-gray-100 rounded-md transition-colors"
               title="Close"
@@ -261,6 +303,16 @@ export default function EditArticle({ article, onClose, onUpdate }: EditArticleP
                       </option>
                     ))}
                   </select>
+                  <button
+                    type="button"
+                    onClick={() => setShowCreateEdition(true)}
+                    className="mt-2 w-full bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-2 rounded-md text-sm font-medium flex items-center justify-center border border-blue-300"
+                  >
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    Create New Edition
+                  </button>
                 </div>
               </div>
 
@@ -287,29 +339,16 @@ export default function EditArticle({ article, onClose, onUpdate }: EditArticleP
               <h4 className="text-lg font-medium text-gray-900 border-b pb-2 mb-4 flex items-center">
                 ✍️ Article Content
               </h4>
-              <div>
-                <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-1">
-                  Write Your Article *
-                </label>
-                <p className="text-xs text-gray-500 mb-3">
-                  Write your article content below using the rich text editor.
-                </p>
-                <div className="w-full">
-                  <SimpleEditor 
-                    value={formData.content}
-                    onChange={(content: string) => setFormData(prev => ({ ...prev, content }))}
-                    placeholder="Start writing your amazing article here..."
-                    height="450px"
-                  />
-                </div>
-                {/* Hidden textarea for form validation */}
-                <textarea
-                  id="content"
+              <p className="text-xs text-gray-500 mb-4 bg-blue-50 p-3 rounded-lg">
+                💡 Use the rich text editor below to write your article content. You can add formatting, images, links, and more!
+              </p>
+              
+              <div className="border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent">
+                <EnhancedEditor 
                   value={formData.content}
-                  onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
-                  className="sr-only"
-                  required
-                  tabIndex={-1}
+                  onChange={(content: string) => setFormData(prev => ({ ...prev, content }))}
+                  placeholder="Start writing your amazing article here..."
+                  height="500px"
                 />
               </div>
             </div>
@@ -363,77 +402,144 @@ export default function EditArticle({ article, onClose, onUpdate }: EditArticleP
               >
                 Cancel
               </button>
-              
-              {/* Show different buttons based on article status */}
-              {(article.status === 'REJECTED' || article.status === 'DRAFT') ? (
-                <>
-                  <button
-                    type="submit"
-                    disabled={isSubmitting || !formData.title || !formData.content}
-                    onClick={() => setSubmitAction('save')}
-                    className="px-6 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
-                  >
-                    {isSubmitting && submitAction === 'save' ? (
-                      <>
-                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-gray-600" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        Saving...
-                      </>
-                    ) : (
-                      <>
-                        💾 Save as Draft
-                      </>
-                    )}
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isSubmitting || !formData.title || !formData.content}
-                    onClick={() => setSubmitAction('review')}
-                    className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
-                  >
-                    {isSubmitting && submitAction === 'review' ? (
-                      <>
-                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        Sending...
-                      </>
-                    ) : (
-                      <>
-                        📤 Send for Review
-                      </>
-                    )}
-                  </button>
-                </>
-              ) : (
-                <button
-                  type="submit"
-                  disabled={isSubmitting || !formData.title || !formData.content}
-                  onClick={() => setSubmitAction('save')}
-                  className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Updating...
-                    </>
-                  ) : (
-                    <>
-                      ✏️ Update Article
-                    </>
-                  )}
-                </button>
-              )}
+              <button
+                type="submit"
+                disabled={isSubmitting || !formData.title || !formData.content}
+                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
+              >
+                {isSubmitting ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Updating...
+                  </>
+                ) : (
+                  <>
+                    📄 Update Article
+                  </>
+                )}
+              </button>
             </div>
           </form>
         </div>
       </div>
+
+      {/* Create Edition Modal */}
+      {showCreateEdition && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-60 p-4">
+          <div className="bg-white rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-semibold text-gray-900">📰 Create New Edition</h3>
+                <button
+                  type="button"
+                  onClick={() => setShowCreateEdition(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <form onSubmit={handleCreateEdition} className="space-y-4">
+                <div>
+                  <label htmlFor="editionTitle" className="block text-sm font-medium text-gray-700 mb-1">
+                    Edition Title *
+                  </label>
+                  <input
+                    type="text"
+                    id="editionTitle"
+                    required
+                    value={editionFormData.title}
+                    onChange={(e) => setEditionFormData(prev => ({ ...prev, title: e.target.value }))}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="e.g., Future of Transportation"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="editionDescription" className="block text-sm font-medium text-gray-700 mb-1">
+                    Description
+                  </label>
+                  <textarea
+                    id="editionDescription"
+                    value={editionFormData.description}
+                    onChange={(e) => setEditionFormData(prev => ({ ...prev, description: e.target.value }))}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    rows={3}
+                    placeholder="Brief description of this edition's focus..."
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="editionPublishDate" className="block text-sm font-medium text-gray-700 mb-1">
+                      Publish Date *
+                    </label>
+                    <input
+                      type="date"
+                      id="editionPublishDate"
+                      required
+                      value={editionFormData.publishDate}
+                      onChange={(e) => setEditionFormData(prev => ({ ...prev, publishDate: e.target.value }))}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="editionNumber" className="block text-sm font-medium text-gray-700 mb-1">
+                      Edition Number
+                    </label>
+                    <input
+                      type="number"
+                      id="editionNumber"
+                      min="1"
+                      value={editionFormData.editionNumber}
+                      onChange={(e) => setEditionFormData(prev => ({ ...prev, editionNumber: e.target.value }))}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="e.g., 4"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label htmlFor="editionTheme" className="block text-sm font-medium text-gray-700 mb-1">
+                    Theme
+                  </label>
+                  <input
+                    type="text"
+                    id="editionTheme"
+                    value={editionFormData.theme}
+                    onChange={(e) => setEditionFormData(prev => ({ ...prev, theme: e.target.value }))}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="e.g., Technology, Environment, Business"
+                  />
+                </div>
+
+                <div className="flex justify-end space-x-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowCreateEdition(false)}
+                    className="px-4 py-2 text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-md"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md disabled:opacity-50"
+                  >
+                    {isSubmitting ? 'Creating...' : 'Create Edition'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
