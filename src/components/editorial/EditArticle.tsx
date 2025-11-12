@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import toast from 'react-hot-toast'
 import { SimpleEditor } from '../tiptap-templates/simple/simple-editor'
 
 interface Edition {
@@ -119,16 +120,16 @@ export default function EditArticle({ article, onClose, onUpdate }: EditArticleP
       })
 
       if (response.ok) {
-        alert(statusMessage)
+        toast.success(statusMessage)
         onUpdate()
         onClose()
       } else {
         const error = await response.json()
-        alert(`❌ Error: ${error.message || 'Failed to update article'}`)
+        toast.error(`Error: ${error.message || 'Failed to update article'}`)
       }
     } catch (error) {
       console.error('Error updating article:', error)
-      alert('❌ Error updating article')
+      toast.error('Error updating article')
     } finally {
       setIsSubmitting(false)
     }

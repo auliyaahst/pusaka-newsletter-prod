@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import toast from 'react-hot-toast'
 import AddArticle from './AddArticle'
 import EditArticle from './EditArticle'
 
@@ -100,9 +101,41 @@ export default function ArticleManagement() {
 
   const deleteArticle = async (articleId: string, articleTitle: string) => {
     // Confirm deletion
-    if (!confirm(`Are you sure you want to permanently delete the article "${articleTitle}"? This action cannot be undone.`)) {
-      return
-    }
+    const confirmed = await new Promise((resolve) => {
+      toast((t) => (
+        <div className="flex flex-col space-y-3">
+          <div className="text-sm font-medium">Delete Article</div>
+          <div className="text-sm text-gray-600">
+            Are you sure you want to permanently delete "{articleTitle}"? This action cannot be undone.
+          </div>
+          <div className="flex space-x-2">
+            <button
+              onClick={() => {
+                toast.dismiss(t.id)
+                resolve(true)
+              }}
+              className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
+            >
+              Delete
+            </button>
+            <button
+              onClick={() => {
+                toast.dismiss(t.id)
+                resolve(false)
+              }}
+              className="px-3 py-1 bg-gray-300 text-gray-700 rounded text-sm hover:bg-gray-400"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ), {
+        duration: Infinity,
+        style: { background: 'white', color: 'black' }
+      })
+    })
+
+    if (!confirmed) return
 
     setIsUpdating(articleId)
     try {
@@ -111,22 +144,56 @@ export default function ArticleManagement() {
       })
 
       if (response.ok) {
-        alert('✅ Article deleted successfully!')
+        toast.success('Article deleted successfully!')
         await fetchArticles() // Refresh the list
       } else {
         const error = await response.json()
-        alert(`❌ Error: ${error.message || 'Failed to delete article'}`)
+        toast.error(`Error: ${error.message || 'Failed to delete article'}`)
       }
     } catch (error) {
       console.error('Error deleting article:', error)
-      alert('❌ Error deleting article')
+      toast.error('Error deleting article')
     } finally {
       setIsUpdating(null)
     }
   }
 
     const archiveArticle = async (id: string) => {
-    if (!confirm('Are you sure you want to archive this article?')) return
+    const confirmed = await new Promise((resolve) => {
+      toast((t) => (
+        <div className="flex flex-col space-y-3">
+          <div className="text-sm font-medium">Archive Article</div>
+          <div className="text-sm text-gray-600">
+            Are you sure you want to archive this article?
+          </div>
+          <div className="flex space-x-2">
+            <button
+              onClick={() => {
+                toast.dismiss(t.id)
+                resolve(true)
+              }}
+              className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
+            >
+              Archive
+            </button>
+            <button
+              onClick={() => {
+                toast.dismiss(t.id)
+                resolve(false)
+              }}
+              className="px-3 py-1 bg-gray-300 text-gray-700 rounded text-sm hover:bg-gray-400"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ), {
+        duration: Infinity,
+        style: { background: 'white', color: 'black' }
+      })
+    })
+    
+    if (!confirmed) return
     
     try {
       const response = await fetch(`/api/editorial/articles/${id}/archive`, {
@@ -135,18 +202,52 @@ export default function ArticleManagement() {
       
       if (response.ok) {
         await fetchArticles()
-        alert('Article archived successfully!')
+        toast.success('Article archived successfully!')
       } else {
         throw new Error('Failed to archive article')
       }
     } catch (error) {
       console.error('Error archiving article:', error)
-      alert('Failed to archive article. Please try again.')
+      toast.error('Failed to archive article. Please try again.')
     }
   }
 
   const unarchiveArticle = async (id: string) => {
-    if (!confirm('Are you sure you want to unarchive this article?')) return
+    const confirmed = await new Promise((resolve) => {
+      toast((t) => (
+        <div className="flex flex-col space-y-3">
+          <div className="text-sm font-medium">Unarchive Article</div>
+          <div className="text-sm text-gray-600">
+            Are you sure you want to unarchive this article?
+          </div>
+          <div className="flex space-x-2">
+            <button
+              onClick={() => {
+                toast.dismiss(t.id)
+                resolve(true)
+              }}
+              className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
+            >
+              Unarchive
+            </button>
+            <button
+              onClick={() => {
+                toast.dismiss(t.id)
+                resolve(false)
+              }}
+              className="px-3 py-1 bg-gray-300 text-gray-700 rounded text-sm hover:bg-gray-400"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ), {
+        duration: Infinity,
+        style: { background: 'white', color: 'black' }
+      })
+    })
+    
+    if (!confirmed) return
     
     try {
       const response = await fetch(`/api/editorial/articles/${id}/unarchive`, {
@@ -155,13 +256,13 @@ export default function ArticleManagement() {
       
       if (response.ok) {
         await fetchArticles()
-        alert('Article unarchived successfully!')
+        toast.success('Article unarchived successfully!')
       } else {
         throw new Error('Failed to unarchive article')
       }
     } catch (error) {
       console.error('Error unarchiving article:', error)
-      alert('Failed to unarchive article. Please try again.')
+      toast.error('Failed to unarchive article. Please try again.')
     }
   }
 

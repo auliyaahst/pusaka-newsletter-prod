@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import toast from 'react-hot-toast'
 
 interface Edition {
   id: string
@@ -69,7 +70,7 @@ export default function EditionManagement() {
       })
 
       if (response.ok) {
-        alert('✅ Edition created and published successfully!')
+        toast.success('Edition created and published successfully!')
         setShowAddForm(false)
         setFormData({
           title: '',
@@ -82,11 +83,11 @@ export default function EditionManagement() {
         await fetchEditions() // Refresh the list
       } else {
         const error = await response.json()
-        alert(`❌ Error: ${error.message || 'Failed to create edition'}`)
+        toast.error(`Error: ${error.message || 'Failed to create edition'}`)
       }
     } catch (error) {
       console.error('Error creating edition:', error)
-      alert('❌ Error creating edition')
+      toast.error('Error creating edition')
     } finally {
       setIsSubmitting(false)
     }
@@ -107,11 +108,11 @@ export default function EditionManagement() {
       if (response.ok) {
         await fetchEditions() // Refresh the list
       } else {
-        alert('Failed to update edition status')
+        toast.error('Failed to update edition status')
       }
     } catch (error) {
       console.error('Error updating edition:', error)
-      alert('Error updating edition')
+      toast.error('Error updating edition')
     }
   }
 

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import toast from 'react-hot-toast'
 import { SimpleEditor } from '../tiptap-templates/simple/simple-editor'
 
 interface Edition {
@@ -91,7 +92,7 @@ export default function AddArticle({ onClose, onSuccess }: AddArticleProps) {
       })
 
       if (response.ok) {
-        alert('✅ Article created successfully!')
+        toast.success('Article created successfully!')
         onClose()
         onSuccess()
         setFormData({
@@ -107,11 +108,11 @@ export default function AddArticle({ onClose, onSuccess }: AddArticleProps) {
         })
       } else {
         const error = await response.json()
-        alert(`❌ Error: ${error.message || 'Failed to create article'}`)
+        toast.error(`Error: ${error.message || 'Failed to create article'}`)
       }
     } catch (error) {
       console.error('Error creating article:', error)
-      alert('❌ Error creating article')
+      toast.error('Error creating article')
     } finally {
       setIsSubmitting(false)
     }
@@ -135,7 +136,7 @@ export default function AddArticle({ onClose, onSuccess }: AddArticleProps) {
 
       if (response.ok) {
         const result = await response.json()
-        alert('✅ Edition created and published successfully!')
+        toast.success('Edition created and published successfully!')
         
         // Refresh editions list
         await fetchEditions()
@@ -154,11 +155,11 @@ export default function AddArticle({ onClose, onSuccess }: AddArticleProps) {
         })
       } else {
         const error = await response.json()
-        alert(`❌ Error: ${error.message || 'Failed to create edition'}`)
+        toast.error(`Error: ${error.message || 'Failed to create edition'}`)
       }
     } catch (error) {
       console.error('Error creating edition:', error)
-      alert('❌ Error creating edition')
+      toast.error('Error creating edition')
     } finally {
       setIsSubmitting(false)
     }

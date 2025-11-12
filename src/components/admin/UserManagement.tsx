@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import toast from 'react-hot-toast'
 
 type UserRole = 'CUSTOMER' | 'EDITOR' | 'PUBLISHER' | 'ADMIN' | 'SUPER_ADMIN'
 type SubscriptionType = 'FREE_TRIAL' | 'MONTHLY' | 'QUARTERLY' | 'HALF_YEARLY' | 'ANNUALLY'
@@ -73,11 +74,11 @@ export default function UserManagement() {
         setCreateUserData({ name: '', email: '', password: '', role: 'CUSTOMER' })
       } else {
         const error = await response.json()
-        alert(error.message || 'Failed to create user')
+        toast.error(error.message || 'Failed to create user')
       }
     } catch (error) {
       console.error('Error creating user:', error)
-      alert('Failed to create user')
+      toast.error('Failed to create user')
     }
   }
 
@@ -96,16 +97,50 @@ export default function UserManagement() {
         setEditingUser(null)
       } else {
         const error = await response.json()
-        alert(error.message || 'Failed to update user')
+        toast.error(error.message || 'Failed to update user')
       }
     } catch (error) {
       console.error('Error updating user:', error)
-      alert('Failed to update user')
+      toast.error('Failed to update user')
     }
   }
 
   const handleDeleteUser = async (userId: string) => {
-    if (!confirm('Are you sure you want to delete this user?')) return
+    const confirmed = await new Promise((resolve) => {
+      toast((t) => (
+        <div className="flex flex-col space-y-3">
+          <div className="text-sm font-medium">Delete User</div>
+          <div className="text-sm text-gray-600">
+            Are you sure you want to delete this user?
+          </div>
+          <div className="flex space-x-2">
+            <button
+              onClick={() => {
+                toast.dismiss(t.id)
+                resolve(true)
+              }}
+              className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
+            >
+              Delete
+            </button>
+            <button
+              onClick={() => {
+                toast.dismiss(t.id)
+                resolve(false)
+              }}
+              className="px-3 py-1 bg-gray-300 text-gray-700 rounded text-sm hover:bg-gray-400"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ), {
+        duration: Infinity,
+        style: { background: 'white', color: 'black' }
+      })
+    })
+
+    if (!confirmed) return
 
     try {
       const response = await fetch(`/api/admin/users/${userId}`, {
@@ -116,11 +151,11 @@ export default function UserManagement() {
         await fetchUsers()
       } else {
         const error = await response.json()
-        alert(error.message || 'Failed to delete user')
+        toast.error(error.message || 'Failed to delete user')
       }
     } catch (error) {
       console.error('Error deleting user:', error)
-      alert('Failed to delete user')
+      toast.error('Failed to delete user')
     }
   }
 

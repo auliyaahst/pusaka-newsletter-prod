@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import toast from 'react-hot-toast'
 import { EditorContent, useEditor } from "@tiptap/react"
 import { StarterKit } from "@tiptap/starter-kit"
 import { Image } from "@tiptap/extension-image"
@@ -235,16 +236,16 @@ export default function EditArticle({ article, onClose, onUpdate }: EditArticleP
       })
 
       if (response.ok) {
-        alert('Article updated successfully!')
+        toast.success('Article updated successfully!')
         onUpdate()
         onClose()
       } else {
         const error = await response.json()
-        alert(`Error: ${error.message || 'Failed to update article'}`)
+        toast.error(`Error: ${error.message || 'Failed to update article'}`)
       }
     } catch (error) {
       console.error('Error updating article:', error)
-      alert('Error updating article')
+      toast.error('Error updating article')
     } finally {
       setIsSubmitting(false)
     }

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import toast from 'react-hot-toast'
 
 type SubscriptionType = 'FREE_TRIAL' | 'MONTHLY' | 'QUARTERLY' | 'HALF_YEARLY' | 'ANNUALLY'
 
@@ -96,11 +97,11 @@ export default function SubscriptionManagement() {
         await fetchStats()
       } else {
         const error = await response.json()
-        alert(error.message || 'Failed to update subscription')
+        toast.error(error.message || 'Failed to update subscription')
       }
     } catch (error) {
       console.error('Error updating subscription:', error)
-      alert('Failed to update subscription')
+      toast.error('Failed to update subscription')
     }
   }
 

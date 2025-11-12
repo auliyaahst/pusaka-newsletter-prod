@@ -251,11 +251,6 @@ function LoginPageContent() {
                 </button>
 
                 <div className="mt-6 text-center space-y-2">
-                  {/* <div>
-                    <Link href="/forgot-password" className="text-sm text-blue-600 hover:text-blue-800 underline">
-                      Forgot your password?
-                    </Link>
-                  </div> */}
                   <div>
                     <span className="text-sm text-gray-600">Don&apos;t have an account? </span>
                     <Link href="/register" className="text-sm text-blue-600 hover:text-blue-800 underline">
